@@ -1,0 +1,83 @@
+{
+  "verified_at": "2026-10-14T21:12:16.533166+00:00",
+  "jenkins_version": "2.580.1",
+  "url": "http://127.0.0.1:8080",
+  "job_name": "PhishShield-CI",
+  "job_url": "http://127.0.0.1:8080/job/PhishShield-CI/",
+  "controller_executors": 0,
+  "agent_name": "phishshield-local",
+  "agent_executors": 1,
+  "scm_polling": "H/5 * * * *",
+  "python_version": "3.13.2",
+  "latest_build": {
+    "_class": "org.jenkinsci.plugins.workflow.job.WorkflowRun",
+    "building": false,
+    "number": 4,
+    "result": "SUCCESS",
+    "url": "http://127.0.0.1:8080/job/PhishShield-CI/4/"
+  },
+  "builds": [
+    {
+      "number": 1,
+      "result": "FAILURE",
+      "url": "http://127.0.0.1:8080/job/PhishShield-CI/1/",
+      "description": null,
+      "intentional_failure": false
+    },
+    {
+      "number": 2,
+      "result": "SUCCESS",
+      "url": "http://127.0.0.1:8080/job/PhishShield-CI/2/",
+      "description": "Tests and exported model verification",
+      "intentional_failure": false,
+      "tests": {
+        "failCount": 0,
+        "skipCount": 0,
+        "passCount": 217
+      },
+      "release_verification": {
+        "status": "passed",
+        "examples_checked": 20,
+        "model_version": 3,
+        "run_id": "e3c4c481ca7346aba76ab9a6e8da87f4",
+        "model_sha256": "8c1407b76ab0f0ee61b64b2f76d0ccce44e9341ccaac0de3fdc9019945786c5c"
+      },
+      "source_commit": "7662eb555af538a40a7aa0202f689f0f1752699b"
+    },
+    {
+      "number": 3,
+      "result": "FAILURE",
+      "url": "http://127.0.0.1:8080/job/PhishShield-CI/3/",
+      "description": "Intentional CI failure demonstration",
+      "intentional_failure": true,
+      "tests": {
+        "failCount": 1,
+        "skipCount": 0,
+        "passCount": 217
+      }
+    },
+    {
+      "number": 4,
+      "result": "SUCCESS",
+      "url": "http://127.0.0.1:8080/job/PhishShield-CI/4/",
+      "description": "Tests and exported model verification",
+      "intentional_failure": false,
+      "tests": {
+        "failCount": 0,
+        "skipCount": 0,
+        "passCount": 217
+      },
+      "release_verification": {
+        "status": "passed",
+        "examples_checked": 20,
+        "model_version": 3,
+        "run_id": "e3c4c481ca7346aba76ab9a6e8da87f4",
+        "model_sha256": "8c1407b76ab0f0ee61b64b2f76d0ccce44e9341ccaac0de3fdc9019945786c5c"
+      },
+      "source_commit": "7662eb555af538a40a7aa0202f689f0f1752699b"
+    }
+  ],
+  "pipeline_sha256": "3b8ccd0259a8bc68c3db38b01c9bfa4b31c8816c150b39858a8aee92364bf66b",
+  "credentials_included": false,
+  "publications_performed": false
+}

@@ -14,6 +14,7 @@ PhishShield analyzes URL text, estimates phishing risk, and shows suspicious pat
 - Repeatable registry/export verification and an offline MLflow review evidence pack.
 - Global permutation-importance chart, confusion matrix, and calibration/ROC/PR curves.
 - Unit, inference, data-split, Streamlit, and MLflow integration tests; GitHub Actions configuration.
+- Configured local Jenkins pipeline with GitHub checkout, JUnit results, model verification, and a tested failure gate.
 
 ## Recorded benchmark
 
@@ -118,12 +119,25 @@ Training registers a new version and updates local aliases. Keep separate output
 
 The suite uses small local fixtures and a temporary MLflow registry. It does not download the full dataset, visit example websites, or need a running server. The GitHub Actions [Tests workflow](.github/workflows/tests.yml) runs on pushes to `main`, pull requests, and manual dispatch, and saves JUnit test reports. Check hosted CI results in the repository's Actions tab.
 
+## Jenkins CI
+
+The local [Jenkins job](http://127.0.0.1:8080/job/PhishShield-CI/) checks out GitHub main, installs the locked Python environment, publishes JUnit results, and verifies the exported model. The latest verified build is **#4: SUCCESS**, with **217 tests passed** and **20 release checks passed**. A separate, explicitly enabled failure demonstration is retained in build history.
+
+```sh
+.venv/bin/python scripts/jenkins_control.py status
+.venv/bin/python scripts/jenkins_control.py build
+```
+
+See [Jenkins setup, login and demo instructions](docs/JENKINS.md). Private access files and Jenkins runtime state are excluded from Git. The controller and dedicated agent restart at login; routine builds do not retrain or promote the model.
+
 ## Project layout
 
 ```text
 app.py                     Streamlit analyzer and model insights
 src/phishshield/           Features, data preparation, training, inference, CLI
 tests/                     Unit and integration tests
+Jenkinsfile                Configured local CI pipeline
+scripts/jenkins_control.py Jenkins status, validation, synchronization and builds
 .github/workflows/         GitHub Actions test workflow
 .streamlit/config.toml     Local theme and app settings
 docs/                      MLflow demo, publishing guide, evaluation evidence
@@ -138,7 +152,7 @@ pyproject.toml             Package metadata and command entry point
 
 Follow [the MLflow review guide](docs/MLFLOW_DEMO.md) to demonstrate candidate comparison, held-out evaluation, artifacts, registry aliases, and the matching app release. Back up `mlflow.db`, `mlartifacts`, and `artifacts/release` for the local review.
 
-Use [the GitHub publishing guide](docs/GITHUB_PUBLISH.md) for the prepared initial repository. Jira, Hugging Face deployment, Jenkins setup, and the final report remain later phases in [the academic plan](PLAN.md). See [CONTRIBUTING.md](CONTRIBUTING.md) for team development.
+Use [the GitHub publishing guide](docs/GITHUB_PUBLISH.md) for the prepared initial repository. Jira, Hugging Face deployment, and the final report remain later phases in [the academic plan](PLAN.md). See [CONTRIBUTING.md](CONTRIBUTING.md) for team development.
 
 ## License and dataset attribution
 

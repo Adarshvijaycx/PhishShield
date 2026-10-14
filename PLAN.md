@@ -2,7 +2,7 @@
 
 ## Current implementation order
 
-The user has chosen to build the local project first, including the URL analyzer, dataset preparation, model comparison, and MLflow tracking/registry. Jira setup, Hugging Face publishing, Jenkins setup, and the final academic report follow after this local phase. The academic rubric below remains the target for final review. When Jira is set up, track the real remaining work; do not backdate sprint history for work already completed. The available local Python environment is 3.13; the application supports Python 3.12 or newer and locks the versions actually tested.
+The user has chosen to build the local project first, including the URL analyzer, dataset preparation, model comparison, and MLflow tracking/registry. The local Jenkins pipeline is now configured and verified; Jira setup, Hugging Face publishing, and the final academic report remain subsequent phases. The academic rubric below remains the target for final review. When Jira is set up, track the real remaining work; do not backdate sprint history for work already completed. The available local Python environment is 3.13; the application supports Python 3.12 or newer and locks the versions actually tested.
 
 ## Academic review requirements
 
@@ -187,17 +187,17 @@ For the academic demo, show one traceable release: candidate comparison → winn
 
 **Jenkins**
 
-Install Jenkins LTS through Homebrew. Configure a local inbound agent named `phishshield-local`, one executor, and a dedicated workspace; set controller executors to zero. Keep controller, agent, and MLflow access local to this trusted student project. [macOS installation](https://www.jenkins.io/download/lts/macos/)
+Jenkins LTS 2.580.1 is installed through Homebrew. The configured local inbound agent `phishshield-local` has one executor and a dedicated workspace; controller executors are zero. Both services start at login. [Verified setup and demo](docs/JENKINS.md). Keep controller, agent, and MLflow access local to this trusted student project. [macOS installation](https://www.jenkins.io/download/lts/macos/)
 
 Implement a Declarative `Jenkinsfile`:
 
 1. Check out the repository.
-2. Create a Python 3.12 virtual environment and install pinned dependencies.
+2. Create an isolated Python 3.13 virtual environment with the available interpreter and install pinned dependencies.
 3. Run pytest and produce JUnit XML.
 4. Verify the exported release bundle and run inference regression checks.
 5. Publish test results and archive release metadata and reports.
 
-Enable manual builds and SCM polling every five minutes. Full training remains a separate local command; ordinary Jenkins builds do not retrain or promote models. [Jenkins reporting](https://www.jenkins.io/doc/pipeline/tour/tests-and-artifacts/)
+Manual builds and SCM polling every five minutes are enabled. Successful builds publish 217 passing tests and 20 model-release checks; the intentional failing-test build demonstrates the quality gate. Full training remains a separate local command; ordinary Jenkins builds do not retrain or promote models. [Jenkins reporting](https://www.jenkins.io/doc/pipeline/tour/tests-and-artifacts/)
 
 **Required tests**
 

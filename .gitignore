@@ -43,3 +43,6 @@ Thumbs.db
 *.log
 .idea/
 .vscode/
+
+# Private local Jenkins credentials, tools, and runtime state
+.jenkins-local/
