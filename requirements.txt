@@ -1,0 +1,14 @@
+# Direct dependency pins; requirements.lock pins transitive dependencies too.
+numpy==2.5.4
+pandas==2.3.3
+scikit-learn==1.9.1
+mlflow==3.17.1
+streamlit==1.65.0
+plotly==6.9.0
+matplotlib==3.11.2
+tldextract==5.4.0
+joblib==1.6.0
+idna==3.20
+requests==2.34.2
+pillow==12.3.0
+pytest==9.1.1

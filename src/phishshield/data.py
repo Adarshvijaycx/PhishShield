@@ -1,0 +1,180 @@
+"""Documented label mapping, conservative cleaning, and domain-disjoint splits."""
+
+from __future__ import annotations
+
+from dataclasses import dataclass
+import hashlib
+from pathlib import Path
+
+import pandas as pd
+from sklearn.model_selection import GroupShuffleSplit, train_test_split
+
+from phishshield.features import URLValidationError, parse_url
+
+
+DATASET_SOURCE = (
+    "https://archive.ics.uci.edu/dataset/967/"
+    "phiusiil%2Bphishing%2Burl%2Bwebsite%2Bdataset"
+)
+SPLIT_FRACTIONS = {"train": 0.60, "validation": 0.15, "calibration": 0.10, "test": 0.15}
+
+
+@dataclass
+class PreparedDataset:
+    frame: pd.DataFrame
+    summary: dict
+    checksum: str
+    source: str = DATASET_SOURCE
+
+
+def file_sha256(path: str | Path) -> str:
+    digest = hashlib.sha256()
+    with Path(path).open("rb") as handle:
+        for block in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(block)
+    return digest.hexdigest()
+
+
+def prepare_dataset(
+    csv_path: str | Path, *, max_rows: int | None = None, seed: int = 42
+) -> PreparedDataset:
+    """Read only raw URLs and original UCI labels: 1=legitimate, 0=phishing.
+
+    The returned labels use 1=phishing and 0=legitimate everywhere. Invalid
+    URLs are counted and removed. All occurrences of a conflicting normalized
+    URL are removed before deduplication or optional stratified sampling.
+    """
+    path = Path(csv_path).expanduser().resolve()
+    if max_rows is not None and max_rows < 40:
+        raise ValueError("max_rows must be at least 40 for four evaluation partitions.")
+    raw = pd.read_csv(
+        path,
+        usecols=lambda column: str(column).strip().casefold() in {"url", "label"},
+        low_memory=False,
+    )
+    raw.columns = [str(column).strip().casefold() for column in raw.columns]
+    if set(raw.columns) != {"url", "label"}:
+        raise ValueError("The CSV must contain URL and label columns with original UCI labels.")
+    raw_count = len(raw)
+    missing_mask = raw["url"].isna() | raw["label"].isna()
+    raw = raw.loc[~missing_mask].copy()
+    original_labels = pd.to_numeric(raw["label"], errors="coerce")
+    if not original_labels.isin([0, 1]).all():
+        raise ValueError("Expected original UCI labels: 1=legitimate and 0=phishing.")
+
+    records = []
+    invalid_urls = 0
+    for row_id, row in raw.iterrows():
+        try:
+            parsed = parse_url(str(row["url"]))
+        except URLValidationError:
+            invalid_urls += 1
+            continue
+        records.append({
+            "row_id": int(row_id),
+            "url": parsed.normalized_url,
+            "label": 1 - int(original_labels.loc[row_id]),
+            "domain_group": parsed.registered_domain or parsed.hostname,
+            "tld": parsed.tld,
+        })
+    if not records:
+        raise ValueError("No usable HTTP(S) URLs remain after validation.")
+    frame = pd.DataFrame.from_records(records)
+    conflicting = frame.groupby("url")["label"].nunique()
+    conflicting_urls = set(conflicting.index[conflicting > 1])
+    conflict_mask = frame["url"].isin(conflicting_urls)
+    conflicting_rows = int(conflict_mask.sum())
+    frame = frame.loc[~conflict_mask].copy()
+    duplicate_rows = int(frame.duplicated("url").sum())
+    frame = frame.drop_duplicates("url", keep="first")
+    usable_rows = len(frame)
+    if frame["label"].nunique() != 2:
+        raise ValueError("The cleaned dataset must contain both legitimate and phishing URLs.")
+    if max_rows is not None and len(frame) > max_rows:
+        frame, _ = train_test_split(
+            frame, train_size=max_rows, stratify=frame["label"], random_state=seed
+        )
+    frame = frame.sort_values("row_id").reset_index(drop=True)
+    summary = {
+        "dataset_source": DATASET_SOURCE,
+        "original_label_mapping": {"0": "phishing", "1": "legitimate"},
+        "internal_label_mapping": {"0": "legitimate", "1": "phishing"},
+        "raw_rows": raw_count,
+        "missing_url_or_label_rows": int(missing_mask.sum()),
+        "invalid_url_rows": invalid_urls,
+        "conflicting_normalized_urls": len(conflicting_urls),
+        "conflicting_label_rows_removed": conflicting_rows,
+        "duplicate_rows_removed": duplicate_rows,
+        "usable_rows_before_sampling": usable_rows,
+        "selected_rows": len(frame),
+        "domain_groups": int(frame["domain_group"].nunique()),
+        "class_counts": {"legitimate": int((frame["label"] == 0).sum()), "phishing": int((frame["label"] == 1).sum())},
+        "sampling_seed": seed,
+    }
+    return PreparedDataset(frame=frame, summary=summary, checksum=file_sha256(path))
+
+
+def split_dataset(frame: pd.DataFrame, *, seed: int = 42) -> pd.DataFrame:
+    """Split whole registrable domains approximately 60/15/10/15.
+
+    GroupShuffleSplit targets fractions of groups, so actual row fractions
+    are reported. Deterministic retries only ensure each partition contains
+    both labels; no model predictions or performance enter split selection.
+    """
+    if frame["domain_group"].nunique() < 8:
+        raise ValueError("At least eight distinct domain groups are needed for the four splits.")
+    for label in (0, 1):
+        if frame.loc[frame["label"] == label, "domain_group"].nunique() < 4:
+            raise ValueError("Each class needs URLs from at least four distinct domain groups.")
+    for attempt in range(50):
+        split_seed = seed + attempt
+        train_idx, remaining_idx = next(GroupShuffleSplit(
+            n_splits=1, test_size=0.40, random_state=split_seed
+        ).split(frame, groups=frame["domain_group"]))
+        remaining = frame.iloc[remaining_idx]
+        val_idx, later_idx = next(GroupShuffleSplit(
+            n_splits=1, train_size=0.375, random_state=split_seed + 1000
+        ).split(remaining, groups=remaining["domain_group"]))
+        later = remaining.iloc[later_idx]
+        cal_idx, test_idx = next(GroupShuffleSplit(
+            n_splits=1, train_size=0.40, random_state=split_seed + 2000
+        ).split(later, groups=later["domain_group"]))
+        indices = {
+            "train": frame.index[train_idx],
+            "validation": remaining.index[val_idx],
+            "calibration": later.index[cal_idx],
+            "test": later.index[test_idx],
+        }
+        if any(frame.loc[index, "label"].nunique() != 2 for index in indices.values()):
+            continue
+        result = frame.copy()
+        result["split"] = ""
+        for name, index in indices.items():
+            result.loc[index, "split"] = name
+        if result["split"].eq("").any() or result.groupby("domain_group")["split"].nunique().max() != 1:
+            raise RuntimeError("Domain-disjoint split verification failed.")
+        result.attrs["split_seed"] = split_seed
+        return result
+    raise ValueError("Could not make four domain-disjoint splits containing both classes. Use more domains.")
+
+
+def split_summary(frame: pd.DataFrame) -> dict:
+    return {
+        name: {
+            "rows": int(len(partition)),
+            "row_fraction": float(len(partition) / len(frame)),
+            "groups": int(partition["domain_group"].nunique()),
+            "legitimate_rows": int((partition["label"] == 0).sum()),
+            "phishing_rows": int((partition["label"] == 1).sum()),
+        }
+        for name, partition in frame.groupby("split", sort=True)
+    }
+
+
+def training_tld_statistics(frame: pd.DataFrame) -> dict[str, dict[str, int | float]]:
+    training = frame.loc[frame["split"] == "train"]
+    return {
+        str(suffix): {"count": int(len(group)), "phishing_rate": float(group["label"].mean())}
+        for suffix, group in training.groupby("tld", sort=True)
+        if suffix
+    }

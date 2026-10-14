@@ -1,0 +1,42 @@
+[build-system]
+requires = ["setuptools>=77", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "phishshield"
+version = "0.1.0"
+description = "An academic phishing URL detector with reproducible MLflow experiments"
+readme = "README.md"
+requires-python = ">=3.12"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [{name = "PhishShield contributors"}]
+keywords = ["phishing", "cybersecurity", "machine-learning", "mlflow", "streamlit"]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Intended Audience :: Education",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Topic :: Security",
+]
+dependencies = [
+  "numpy>=2.2,<3", "pandas>=2.2,<3", "scikit-learn>=1.7,<2",
+  "mlflow>=3.5,<4", "streamlit>=1.50,<2", "plotly>=6,<7",
+  "matplotlib>=3.10,<4", "tldextract>=5.3,<6", "joblib>=1.5,<2",
+  "idna>=3.10,<4", "requests>=2.32,<3", "pillow>=11,<13",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.4,<10"]
+
+[project.scripts]
+phishshield = "phishshield.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+addopts = "-ra"
+filterwarnings = ["ignore:.*resource_tracker.*:UserWarning"]

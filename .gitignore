@@ -1,0 +1,45 @@
+# Python environments, build products, and test output
+.venv/
+venv/
+env/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.cache/
+build/
+dist/
+.coverage
+.coverage.*
+coverage.xml
+htmlcov/
+reports/
+
+# Local datasets, trained artifacts, and MLflow state
+data/raw/
+data/processed/
+artifacts/
+mlartifacts/
+mlruns/
+*.db
+*.db-*
+*.sqlite
+*.sqlite3
+*.joblib
+*.pkl
+*.pickle
+
+# Credentials and machine-specific files
+.env
+.env.*
+!.env.example
+.streamlit/secrets.toml
+*.pem
+*.key
+*.p12
+*.pfx
+.DS_Store
+Thumbs.db
+*.log
+.idea/
+.vscode/

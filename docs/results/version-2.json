@@ -1,0 +1,104 @@
+{
+  "description": "Recorded evaluation of local release version 2; not a live reputation assessment.",
+  "model": {
+    "model_name": "PhishShield",
+    "model_version": 2,
+    "algorithm": "Random Forest",
+    "feature_version": "1.1.0",
+    "created_at": "2026-10-14T14:21:00.830840+00:00",
+    "run_id": "974bbf9d17a34b4287f70d2b77a315dd",
+    "threshold": 0.5,
+    "risk_bands": {
+      "low": 30,
+      "high": 70
+    },
+    "metrics": {
+      "accuracy": 0.9835107005028652,
+      "precision": 0.9964468132356207,
+      "recall": 0.9630822064820777,
+      "f1": 0.9794804627810522,
+      "average_precision": 0.9980589140715262,
+      "roc_auc": 0.9977703979203572,
+      "false_positive_rate": 0.0023730657042566865,
+      "brier_score": 0.010628489737584079,
+      "log_loss": 0.03963833142025929
+    },
+    "model_sha256": "ce4c2296ca377dc6a07166c0ab81bd897cbe5e6ae9067e8dcd614b85584853e2",
+    "dataset_checksum": "a236549cd369cd80bd478ff8e1779cbf44c58d5c3f79f7a51a1adbed7d06d1c6",
+    "dependency_versions": {
+      "scikit-learn": "1.9.1",
+      "numpy": "2.5.4",
+      "pandas": "2.3.3",
+      "scipy": "1.18.1",
+      "joblib": "1.6.0",
+      "tldextract": "5.4.0",
+      "mlflow": "3.17.1",
+      "python": "3.13.2"
+    }
+  },
+  "dataset": {
+    "dataset_source": "https://archive.ics.uci.edu/dataset/967/phiusiil%2Bphishing%2Burl%2Bwebsite%2Bdataset",
+    "original_label_mapping": {
+      "0": "phishing",
+      "1": "legitimate"
+    },
+    "internal_label_mapping": {
+      "0": "legitimate",
+      "1": "phishing"
+    },
+    "raw_rows": 235795,
+    "missing_url_or_label_rows": 0,
+    "invalid_url_rows": 0,
+    "conflicting_normalized_urls": 1,
+    "conflicting_label_rows_removed": 2,
+    "duplicate_rows_removed": 897,
+    "usable_rows_before_sampling": 234896,
+    "selected_rows": 234896,
+    "domain_groups": 197708,
+    "class_counts": {
+      "legitimate": 134849,
+      "phishing": 100047
+    },
+    "sampling_seed": 42,
+    "dataset_checksum": "a236549cd369cd80bd478ff8e1779cbf44c58d5c3f79f7a51a1adbed7d06d1c6",
+    "requested_split_fractions": {
+      "train": 0.6,
+      "validation": 0.15,
+      "calibration": 0.1,
+      "test": 0.15
+    },
+    "splits": {
+      "calibration": {
+        "rows": 24442,
+        "row_fraction": 0.10405456031605477,
+        "groups": 19771,
+        "legitimate_rows": 13485,
+        "phishing_rows": 10957
+      },
+      "test": {
+        "rows": 34204,
+        "row_fraction": 0.14561337783529732,
+        "groups": 29657,
+        "legitimate_rows": 20227,
+        "phishing_rows": 13977
+      },
+      "train": {
+        "rows": 142384,
+        "row_fraction": 0.6061576186908249,
+        "groups": 118624,
+        "legitimate_rows": 80903,
+        "phishing_rows": 61481
+      },
+      "validation": {
+        "rows": 33866,
+        "row_fraction": 0.14417444315782305,
+        "groups": 29656,
+        "legitimate_rows": 20234,
+        "phishing_rows": 13632
+      }
+    },
+    "split_seed": 42,
+    "domain_overlap": 0
+  },
+  "limitations": "All legitimate examples in this collection use HTTPS, www hosts, and root pages. Results do not establish current-web performance."
+}
