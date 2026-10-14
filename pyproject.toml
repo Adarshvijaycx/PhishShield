@@ -20,7 +20,7 @@ classifiers = [
   "Topic :: Security",
 ]
 dependencies = [
-  "numpy>=2.2,<3", "pandas>=2.2,<3", "scikit-learn>=1.7,<2",
+  "numpy>=2.2,<3", "pandas>=2.2,<3", "pyarrow>=21,<26", "scikit-learn>=1.7,<2",
   "mlflow>=3.5,<4", "streamlit>=1.50,<2", "plotly>=6,<7",
   "matplotlib>=3.10,<4", "tldextract>=5.3,<6", "joblib>=1.5,<2",
   "idna>=3.10,<4", "requests>=2.32,<3", "pillow>=11,<13",

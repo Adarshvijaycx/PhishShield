@@ -6,7 +6,8 @@ PhishShield analyzes URL text, estimates phishing risk, and shows suspicious pat
 
 ## Features
 
-- Predicted category and calibrated 0–100 risk gauge with Low, Medium, and High bands.
+- Calibrated 0–100 model gauge with Low, Medium, and High bands, plus an independent caution assessment.
+- Offline brand-lookalike warnings for digit substitutions, typos, selected Unicode confusables, added brand text, and misleading subdomains.
 - Indicators for IP hosts, `@`, many subdomains, long URLs, keywords, hostname hyphens, HTTP, punycode, and training-derived domain-suffix associations.
 - Logistic Regression, Random Forest, and Histogram Gradient Boosting comparison.
 - MLflow runs, evaluation artifacts, model registry, and `candidate`/`champion` aliases.
@@ -15,13 +16,15 @@ PhishShield analyzes URL text, estimates phishing risk, and shows suspicious pat
 
 ## Recorded benchmark
 
-The current local release is **Random Forest, version 2**, using feature schema **1.1.0**. Results below come from 34,204 held-out URLs in the historical UCI collection.
+The current local release is **Random Forest, version 3**, using feature schema **1.1.0**. It uses the [Hannousse–Yahiouche dataset, version 3](https://data.mendeley.com/datasets/c2gw7fy2j4/3), which includes legitimate URLs with paths and queries. Results below come from **1,944 domain-disjoint test URLs**.
 
 | Accuracy | Phishing precision | Phishing recall | Phishing F1 |
 |---:|---:|---:|---:|
-| 98.35% | 99.64% | 96.31% | 97.95% |
+| 82.00% | 86.49% | 75.80% | 80.79% |
 
-**Dataset limitation:** all legitimate examples in this collection use HTTPS, a `www` hostname, and a root page. This narrow profile can inflate benchmark results and cause false positives for other legitimate URL formats. These figures do not establish current-web performance. See [MODEL_CARD.md](MODEL_CARD.md) and [the saved evaluation summary](docs/results/version-2.json).
+These are historical dataset results, not current-web accuracy. Domain-warning rules are evaluated separately and are excluded from these classifier metrics. See [MODEL_CARD.md](MODEL_CARD.md) and [the saved evaluation summary](docs/results/version-3.json).
+
+**Why the dataset changed:** version 2's UCI corpus contained only HTTPS, `www`, root-page legitimate examples. Its 98.35% benchmark concealed severe false positives on ordinary paths. Version 3 uses a more varied corpus and reports its lower measured accuracy honestly. Earlier results remain in [the version 2 archive](docs/results/version-2.json) and MLflow; the cohorts differ, so their accuracy figures are not a like-for-like comparison.
 
 ![Held-out test confusion matrix](docs/images/confusion-matrix.png)
 
@@ -47,7 +50,7 @@ Download the documented dataset, train the candidates, and verify the release:
 
 **Fresh clones require training:** raw data, serialized models, and local MLflow state are generated locally and are not committed to this repository. The setup and tests work without them; real predictions require a trained release.
 
-For a smaller development run, use `phishshield train --max-rows 20000`. The sample size is recorded in metadata; use the full dataset for academic evaluation.
+The default download contains 11,430 records; cleaning leaves 11,411 usable URLs. For a smaller development run, use `phishshield train --max-rows 4000`. Use the full corpus for academic evaluation. Download provenance pins the mirror revision and both source-file checksums.
 
 ## Run the demo
 
@@ -73,14 +76,27 @@ The app reads `artifacts/release`; tracking uses the project-local `mlflow.db` a
 
 ## Methodology
 
-1. Read only raw URL and label columns from [UCI PhiUSIIL](https://archive.ics.uci.edu/dataset/967/phiusiil%2Bphishing%2Burl%2Bwebsite%2Bdataset). Remap original 0=phishing, 1=legitimate to project 1=phishing, 0=legitimate.
+1. Read only raw URL and `status` columns from the licensed Hannousse–Yahiouche corpus through a pinned public mirror. Recombine its original train/test files, discard their old partitions, and map phishing=1, legitimate=0. Webpage/external-service features are excluded.
 2. Normalize URLs conservatively, remove duplicates/conflicting labels, and extract 30 numeric features using the same offline transformer as inference. Empty root paths and `/` receive identical features; other paths retain case and encoding.
-3. Keep domain groups disjoint across approximate 60/15/10/15 training/validation/calibration/test partitions, seed 42.
+3. Keep domain groups disjoint across approximate 60/15/10/15 training/validation/calibration/test partitions, seed 43.
 4. Compare three models with balanced class weights and a prior baseline. Select by validation average precision, with phishing recall as tie-breaker.
 5. Freeze the selected estimator and fit sigmoid calibration only on calibration data. Evaluate the final model on untouched test data.
 6. Register the fitted pipeline, verify its exported checksum and prediction parity, and assign the `champion` alias.
 
-Risk is `100 × P(phishing)`. The category threshold is 0.5; risk bands are below 30, 30 to below 70, and at least 70. Indicators describe observed patterns and do not override model predictions or establish individual causality.
+The **model score** is `100 × calibrated P(phishing)`, with threshold 0.5 and bands below 30, 30 to below 70, and at least 70. The **caution assessment** is separate: a domain-lookalike warning displays “Suspicious domain — review required” with High caution, even if the model score is low. Its score is available under “View the unmodified model estimate.” Medium model estimates are presented as uncertain. Generic structural indicators provide context.
+
+Neither spelling warnings nor catalogue domain matches prove phishing, ownership, or safety. The catalogue is a limited comparison reference and never lowers the model probability. No submitted website is opened.
+
+Behavioral review of the reported failures is saved in [the version 3 summary](docs/results/version-3.json); the YouTube watch URL scores **3.91/100, Low**, while the two Google-like spellings trigger explicit review warnings. These cases are not an independently labeled accuracy benchmark and are not used for candidate selection or calibration.
+
+For reproducing the older UCI experiment:
+
+```sh
+.venv/bin/phishshield download --dataset phiusiil
+.venv/bin/phishshield train --data data/raw/PhiUSIIL_Phishing_URL_Dataset.csv --output artifacts/uci-comparison --seed 42
+```
+
+Training registers a new version and updates local aliases. Keep separate output folders when comparing sources; UCI results should not be presented as the default release's performance.
 
 ![Global feature importance on validation data](docs/images/feature-importance.png)
 
@@ -117,8 +133,10 @@ Use [the GitHub publishing guide](docs/GITHUB_PUBLISH.md) for the prepared initi
 
 ## License and dataset attribution
 
-Project code is licensed under the [MIT License](LICENSE). This does not change the dataset's separate CC BY 4.0 license.
+Project code is licensed under the [MIT License](LICENSE). Both documented datasets retain their separate CC BY 4.0 attribution.
 
-Prasad, A. and Chandra, S. (2024). *PhiUSIIL Phishing URL (Website).* UCI Machine Learning Repository. [Dataset and attribution details](https://archive.ics.uci.edu/dataset/967/phiusiil%2Bphishing%2Burl%2Bwebsite%2Bdataset).
+Hannousse, A. and Yahiouche, S. (2021). *Web page phishing detection*, version 3. Mendeley Data. DOI: [10.17632/c2gw7fy2j4.3](https://data.mendeley.com/datasets/c2gw7fy2j4/3). Collected May 2020. Downloaded via [pirocheto/phishing-url](https://huggingface.co/datasets/pirocheto/phishing-url/tree/1375d450d4540205ac11781b807249c9509739cd), revision `1375d450d4540205ac11781b807249c9509739cd`; both mirror partitions are recombined and only raw URL/status retained. Download metadata documents this transformation and source hashes.
+
+Historical optional dataset: Prasad, A. and Chandra, S. (2024). *PhiUSIIL Phishing URL (Website).* UCI Machine Learning Repository. [Dataset and attribution details](https://archive.ics.uci.edu/dataset/967/phiusiil%2Bphishing%2Burl%2Bwebsite%2Bdataset).
 
 URL-only models can miss convincing phishing URLs and flag legitimate complex URLs. This project does not inspect HTML, TLS certificates, WHOIS, DNS, redirects, or live reputation. Only load trusted model artifacts; the app does not accept uploaded model files.

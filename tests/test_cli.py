@@ -181,8 +181,8 @@ def test_default_download_recombines_pinned_parquet_urls_and_records_provenance(
     assert list(data.columns) == ["URL", "status"]
     assert data["status"].tolist() == ["legitimate", "phishing"]
     result = prepare_dataset(destination)
-    assert result.summary["provenance"]["mirror_revision"] == HANNOUSSE_MIRROR_REVISION
-    assert len(result.summary["provenance"]["source_files"]) == 2
+    assert result.summary["dataset_provenance"]["mirror_revision"] == HANNOUSSE_MIRROR_REVISION
+    assert len(result.summary["dataset_provenance"]["source_files"]) == 2
     assert sorted(file.name for file in tmp_path.iterdir()) == [destination.name, destination.with_suffix(".source.json").name]
 
 

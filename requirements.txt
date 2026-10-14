@@ -1,6 +1,7 @@
 # Direct dependency pins; requirements.lock pins transitive dependencies too.
 numpy==2.5.4
 pandas==2.3.3
+pyarrow==25.0.1
 scikit-learn==1.9.1
 mlflow==3.17.1
 streamlit==1.65.0

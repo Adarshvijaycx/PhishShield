@@ -41,6 +41,7 @@ from phishshield.data import (
     training_tld_statistics,
 )
 from phishshield.features import FEATURE_NAMES, FEATURE_VERSION, URLFeatureExtractor
+from phishshield.domain_signals import DOMAIN_SIGNAL_VERSION, get_domain_signals
 
 
 MODEL_NAME = "PhishShield"
@@ -229,9 +230,53 @@ def _save_importance(
     return table
 
 
+
+def _behavior_review(model: Pipeline) -> dict:
+    """Report known failure patterns separately from labeled test metrics.
+
+    These cases never select a candidate, fit calibration, or label an unknown
+    domain as malicious. They record probabilities and spelling observations.
+    """
+    urls = [
+        "https://mail.g0ogle.com/",
+        "https://mail.googletex.com/",
+        "https://www.youtube.com/watch?v=HsZxZ8hoYdU",
+        "https://mail.google.com/",
+        "https://www.google.com/search?q=python",
+        "https://www.example.com/about?topic=python#intro",
+        "https://www.example.com/",
+        "http://secure-account.example.org/login/verify?account=update",
+        "http://example.com@192.0.2.10/verify-account",
+        "https://youtube.com.unrelated.test/watch?v=example",
+    ]
+    probabilities = _probabilities(model, pd.DataFrame({"url": urls}))
+    cases = []
+    for url, probability in zip(urls, probabilities):
+        score = float(probability * 100)
+        cases.append({
+            "url": url,
+            "model_probability": float(probability),
+            "model_score": score,
+            "model_band": "Low" if score < 30 else "Medium" if score < 70 else "High",
+            "domain_warnings": [signal.to_dict() for signal in get_domain_signals(url)],
+        })
+    return {
+        "purpose": "Behavioral review; not an independently labeled phishing benchmark",
+        "not_used_for_selection_or_calibration": True,
+        "domain_warning_version": DOMAIN_SIGNAL_VERSION,
+        "cases": cases,
+    }
+
+
+def _source_hashes() -> dict[str, str]:
+    files = list((PROJECT_ROOT / "src" / "phishshield").glob("*.py"))
+    files += [PROJECT_ROOT / name for name in ("app.py", "pyproject.toml", "requirements.lock")]
+    return {str(file.relative_to(PROJECT_ROOT)): file_sha256(file) for file in sorted(files) if file.is_file()}
+
+
 def train_project(
     csv_path: Path, output_dir: Path, tracking_uri: str | None = None,
-    max_rows: int | None = None, seed: int = 42, importance_samples: int = 2000,
+    max_rows: int | None = None, seed: int = 43, importance_samples: int = 2000,
 ) -> dict:
     """Create one validated release without selecting on calibration/test data."""
     output = Path(output_dir).expanduser().resolve()
@@ -250,6 +295,7 @@ def train_project(
     common_params = {
         "seed": seed, "split_seed": frame.attrs["split_seed"], "feature_version": FEATURE_VERSION,
         "dataset_checksum": prepared.checksum, "threshold": THRESHOLD, "model_scope": "full_url",
+        "dataset_kind": prepared.summary.get("dataset_kind", "phiusiil"),
         **{f"{name}_rows": len(partition) for name, partition in datasets.items()},
     }
     summary = {**prepared.summary, "dataset_checksum": prepared.checksum,
@@ -338,12 +384,17 @@ def train_project(
                 "model_name": MODEL_NAME, "model_version": int(version), "run_id": run.info.run_id,
                 "algorithm": algorithm, "created_at": created_at, "feature_version": FEATURE_VERSION,
                 "dataset_checksum": prepared.checksum, "dataset_source": prepared.source,
+                "dataset_kind": prepared.summary.get("dataset_kind", "phiusiil"),
+                "dataset_provenance": prepared.summary.get("dataset_provenance", prepared.summary.get("provenance", {})),
+                "dataset_url_profiles": prepared.summary.get("url_format_profile_by_class", {}),
                 "model_scope": "full_url", "model_features": list(FEATURE_NAMES),
                 "assessment_policy": "independent_domain_warnings_v1",
                 "probability_scope": "Historical full-URL lexical estimate; no live reputation or website verification",
                 "model_sha256": file_sha256(model_path), "threshold": THRESHOLD, "risk_bands": RISK_BANDS,
                 "metrics": test_metrics, "tld_statistics": training_tld_statistics(frame),
                 "dependency_versions": versions, "code_revision": _git_revision(),
+                "source_file_sha256": _source_hashes(),
+                "domain_warning_version": DOMAIN_SIGNAL_VERSION,
                 "selection_run_id": candidate_runs[algorithm], "selection_metric": "validation_average_precision",
                 "selection_score": float(comparison.iloc[0]["average_precision"]),
                 "split_seed": frame.attrs["split_seed"],
@@ -351,6 +402,7 @@ def train_project(
                 "calibration_rows": len(datasets["calibration"]), "test_rows": len(datasets["test"]),
             }
             _write_json(output / "manifest.json", manifest)
+            _write_json(output / "behavior_review.json", _behavior_review(registered_pipeline))
             snapshots = []
             test_partition = datasets["test"].reset_index(drop=True)
             selected_indices = []

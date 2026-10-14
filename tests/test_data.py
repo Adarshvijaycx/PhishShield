@@ -105,7 +105,7 @@ def test_dataset_provenance_requires_csv_checksum_and_source_kind(tmp_path):
     pd.DataFrame({"URL": ["https://a.example/", "https://b.example/"], "status": ["legitimate", "phishing"]}).to_csv(path, index=False)
     metadata = path.with_suffix(".source.json")
     metadata.write_text(json.dumps({"dataset_kind": "hannousse", "csv_sha256": file_sha256(path), "mirror_revision": "fixture"}))
-    assert prepare_dataset(path).summary["provenance"]["mirror_revision"] == "fixture"
+    assert prepare_dataset(path).summary["dataset_provenance"]["mirror_revision"] == "fixture"
     metadata.write_text(json.dumps({"dataset_kind": "hannousse", "csv_sha256": "stale"}))
     with pytest.raises(ValueError, match="provenance does not match"):
         prepare_dataset(path)

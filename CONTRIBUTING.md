@@ -13,4 +13,4 @@ Keep URL parsing and features shared between training and inference. A change to
 
 Include a short description of the behavior changed and the checks run in a pull request. Use reserved example domains or documentation IPs in examples. Redact credentials and private query parameters from bug reports. Do not commit datasets, serialized models, local databases, environments, or secrets.
 
-Code contributions use the repository's MIT license. The UCI dataset keeps its separate CC BY 4.0 attribution. Report actual results and contributions; do not claim a CI run, deployment, or training result occurred unless it has been verified.
+Code contributions use the repository's MIT license. The Hannousse and optional UCI datasets keep their separate CC BY 4.0 attribution. Report actual results and contributions; do not claim a CI run, deployment, or training result occurred unless it has been verified.

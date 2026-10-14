@@ -94,6 +94,10 @@ def test_domain_advisory_preserves_fitted_model_probability(fitted_bundle, url):
     )[0, phishing_column])
     result = analyze_url(url, fitted_bundle)
     assert result.phishing_probability == expected
+    assert result.category == "Suspicious domain — review required"
+    assert result.assessment_band == "High"
+    assert result.assessment_basis == "domain_warning"
+    assert result.domain_signals
     assert result.risk_score == expected * 100
     assert np.isfinite(result.phishing_probability)
 

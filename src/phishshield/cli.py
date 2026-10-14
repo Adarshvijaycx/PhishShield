@@ -135,7 +135,7 @@ def main(argv: list[str] | None = None) -> int:
     train.add_argument("--output", type=Path, default=DEFAULT_RELEASE)
     train.add_argument("--tracking-uri", default=None)
     train.add_argument("--max-rows", type=int, default=None, help="Optional reproducible sample for development; recorded in metadata")
-    train.add_argument("--seed", type=int, default=42)
+    train.add_argument("--seed", type=int, default=43)
     train.add_argument("--importance-samples", type=int, default=2000)
     for command in ["analyze", "verify"]:
         sub = commands.add_parser(command, help="Analyze a URL" if command == "analyze" else "Check release integrity and regression fixtures")

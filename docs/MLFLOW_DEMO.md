@@ -16,11 +16,11 @@ Open MLflow at <http://127.0.0.1:5001> and the analyzer at <http://127.0.0.1:850
 
 1. Select the **PhishShield** experiment. Each full training cycle creates a baseline, three candidate runs, and a final calibrated-release run. Earlier runs are retained.
 2. Filter with `tags.phase = 'candidate'`. Select the latest Logistic Regression, Random Forest, and Histogram Gradient Boosting runs; compare `validation_average_precision`, `validation_recall`, `validation_f1`, and fit time. Candidate evaluation uses validation data, not final test data.
-3. Open the latest run with `tags.phase = 'release'`. Show `test_accuracy`, phishing precision/recall/F1, ROC-AUC, false-positive rate, Brier score, and log-loss. These are the actual frozen calibrated model's results. The current champion is version 2 with feature version 1.1.0; use its metrics rather than the older version 1 figures.
-4. Browse **Artifacts → release**. Show `comparison.csv`, dataset/split summary, confusion matrix, calibration plot, PR/ROC curves, and `feature_importance.png`. The feature chart measures global validation permutation importance; it does not explain a single submitted URL.
+3. Open the latest run with `tags.phase = 'release'`. Show `test_accuracy`, phishing precision/recall/F1, ROC-AUC, false-positive rate, Brier score, and log-loss. These are the actual frozen calibrated model's results. The current champion is version 3 with feature version 1.1.0 and the Hannousse corpus. Use its metrics; earlier UCI versions have a different evaluation cohort.
+4. Browse **Artifacts → release**. Show `comparison.csv`, dataset/split summary, confusion matrix, calibration plot, PR/ROC curves, and `feature_importance.png`. Show `behavior_review.json` separately: it records model scores and independent spelling warnings, not labeled accuracy. The feature chart measures global validation permutation importance; it does not explain a single submitted URL.
 5. Open **Models → PhishShield**. Show the selected version's `candidate` and `champion` aliases, `validation_status=passed`, source run, feature version, and model checksum. Aliases are the modern registry workflow; they do not mean this student model has been validated for security operations.
 6. Open the analyzer. Select **Simple HTTPS**, then **Analyze URL**. Repeat with **Account keywords** or **Misleading address**. The examples use reserved domains/documentation IPs and are not fetched. Their predicted categories are model outputs, not assigned labels.
-7. Open **Model Insights**. Match the release version and run ID to MLflow, then show candidate validation results, held-out test results, and the importance chart. Explain the dataset's narrow legitimate-URL profile.
+7. Open **Model Insights**. Match the release version and run ID to MLflow, then show candidate validation results, held-out test results, and the importance chart. Explain why version 3 uses a varied corpus: UCI versions falsely flagged ordinary paths because their benign training URLs were root pages. Show the new URL-format profile and provenance. Explain that high-caution spelling warnings are separate from the model estimate and excluded from classifier metrics.
 8. Show a malformed input's validation error. Run `.venv/bin/phishshield verify` to demonstrate checksum and regression verification.
 
 ## Saved evidence
@@ -29,6 +29,7 @@ Open MLflow at <http://127.0.0.1:5001> and the analyzer at <http://127.0.0.1:850
 - `manifest.json`: model version, run IDs, feature version, dependencies, checksums, threshold, risk bands, and train/validation/calibration/test counts.
 - `dataset_summary.json` and `split_assignments.csv`: cleaning and domain separation evidence.
 - `comparison.csv` and `baseline_metrics.json`: validation comparison and prior baseline.
+- `behavior_review.json`: offline behavior checks for reported failures; no invented phishing ground truth.
 - `metrics.json`, evaluation PNGs, and importance CSV/PNG: final test results and global explanation.
 - `known_urls.json`: documented held-out URL prediction snapshots for stability checks; these are distinct from accuracy evaluation.
 

@@ -141,7 +141,7 @@ def prepare_dataset(
     summary = {
         "dataset_source": source,
         "dataset_kind": dataset_kind,
-        "provenance": provenance,
+        "dataset_provenance": provenance,
         "url_format_profile_by_class": format_profile,
         "original_label_mapping": original_mapping,
         "internal_label_mapping": {"0": "legitimate", "1": "phishing"},

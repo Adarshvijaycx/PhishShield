@@ -36,13 +36,22 @@ def test_tiny_training_creates_a_reloadable_registered_release(tmp_path, monkeyp
         is_phishing = index % 2
         url = (f"http://verify-account-{index}.example/login?password=12345678" if is_phishing
                else f"https://site{index}.example/articles")
-        rows.append({"URL": url, "label": 1 - is_phishing})
+        rows.append({"URL": url, "status": "phishing" if is_phishing else "legitimate"})
     pd.DataFrame(rows).to_csv(path, index=False)
     output = tmp_path / "release"
     uri = f"sqlite:///{tmp_path / 'mlflow.db'}"
     manifest = training.train_project(path, output, uri, seed=42, importance_samples=12)
     assert manifest["model_sha256"] == file_sha256(output / "model.joblib")
     assert manifest["dataset_checksum"] == file_sha256(path)
+    assert manifest["dataset_kind"] == "hannousse"
+    assert manifest["dataset_provenance"]["csv_sha256"] == file_sha256(path)
+    assert manifest["dataset_url_profiles"]["legitimate"]["nonroot_path"] == 1
+    assert manifest["assessment_policy"] == "independent_domain_warnings_v1"
+    review = json.loads((output / "behavior_review.json").read_text())
+    assert review["not_used_for_selection_or_calibration"] is True
+    assert "benchmark" in review["purpose"]
+    assert review["cases"][0]["domain_warnings"][0]["code"] == "brand_digit_substitution"
+    assert all(0 <= case["model_probability"] <= 1 for case in review["cases"])
     assert sum(manifest[key] for key in ("training_rows", "validation_rows", "calibration_rows", "test_rows")) == 160
     comparison = pd.read_csv(output / "comparison.csv")
     assert len(comparison) == 3

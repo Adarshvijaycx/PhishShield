@@ -118,3 +118,18 @@ def test_unavailable_release_is_clear_and_does_not_simulate_predictions(tmp_path
     assert any("phishshield.cli train" in code.value for code in app.code)
     assert not app.metric
     assert not app.get("plotly_chart")
+
+
+def test_lookalike_domain_warning_is_primary_even_if_model_disagrees(ui_release):
+    app = _analyze(_app(), "https://mail.g0ogle.com/")
+    assert not app.exception
+    result = app.session_state["prediction"]
+    assert result.category == "Suspicious domain — review required"
+    assert result.assessment_basis == "domain_warning"
+    assert result.assessment_band == "High"
+    assert result.risk_score == pytest.approx(50.)  # unmodified fitted fixture
+    assert result.risk_band == "Medium"
+    assert result.domain_signals[0]["code"] == "brand_digit_substitution"
+    assert any("Verify the address independently" in error.value for error in app.error)
+    assert "Domain identity warnings" in [heading.value for heading in app.subheader]
+    assert any("unmodified model estimate" in expander.label for expander in app.expander)

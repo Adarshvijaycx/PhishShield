@@ -359,7 +359,7 @@ def main() -> None:
     _inject_style()
     release_dir = Path(os.environ.get("PHISHSHIELD_RELEASE_DIR", str(APP_ROOT / "artifacts" / "release"))).expanduser().resolve()
     fingerprint = _release_fingerprint(release_dir)
-    identity = (str(release_dir), fingerprint)
+    identity = (str(release_dir), fingerprint, "independent_domain_warnings_v1")
     if st.session_state.get("release_identity") != identity:
         st.session_state["release_identity"] = identity
         st.session_state.pop("prediction", None)

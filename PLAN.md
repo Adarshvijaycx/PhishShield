@@ -91,14 +91,9 @@ flowchart LR
 
 **Dataset**
 
-Use [UCI PhiUSIIL](https://archive.ics.uci.edu/dataset/967/phiusiil%2Bphishing%2Burl%2Bwebsite%2Bdataset), which contains 235,795 labeled URLs and permits reuse with attribution. Read only its raw URL and label columns; recompute features locally because its supplied feature table includes webpage-derived information.
+Use [Hannousse–Yahiouche, version 3](https://data.mendeley.com/datasets/c2gw7fy2j4/3): 11,430 balanced labeled URLs, collected in 2020, licensed CC BY 4.0. Read only raw URL and `status` columns from a pinned public mirror; discard the mirror's original partitions and make fresh domain-disjoint splits. Map `phishing` → project `1`, `legitimate` → project `0`. Record source, mirror revision, file/CSV checksums, class counts, cleaning, and per-class URL-format profiles.
 
-Remap its original labels explicitly:
-
-- Original `0` → project `1`, meaning phishing.
-- Original `1` → project `0`, meaning legitimate.
-
-Record the download source, checksum, original class counts, and cleaning results.
+Retain optional [UCI PhiUSIIL](https://archive.ics.uci.edu/dataset/967/phiusiil%2Bphishing%2Burl%2Bwebsite%2Bdataset) for historical comparison, with original `0` → phishing project `1`, original `1` → legitimate project `0`. Its all-HTTPS, `www`, root-page benign collection biased earlier models; do not present its inflated benchmark as current-web performance. Never import supplied webpage features into the URL-only model.
 
 **Preparation and features**
 
@@ -110,7 +105,7 @@ Record the download source, checksum, original class counts, and cleaning result
 
 **Evaluation design**
 
-Split approximately **60% training, 15% validation, 10% calibration, and 15% test**, with seed `42`. Keep registrable domains disjoint across partitions; group IP hosts by IP. Save split assignments and verify both classes exist in every partition.
+Split approximately **60% training, 15% validation, 10% calibration, and 15% test**, with seed `43` for the current corpus. Keep registrable domains disjoint across partitions; group IP hosts by IP. Save split assignments and verify both classes exist in every partition.
 
 Compare:
 
@@ -120,7 +115,7 @@ Compare:
 | Random Forest | 200 trees; maximum depth 20; minimum leaf size 2 |
 | Histogram Gradient Boosting | 200 iterations; learning rate 0.1; 31 leaf nodes |
 
-Use other scikit-learn defaults and seed `42` where supported. Include a majority/prior baseline. Avoid extensive hyperparameter tuning during the one-week build.
+Use other scikit-learn defaults and seed `43` where supported. Include a majority/prior baseline. Avoid extensive hyperparameter tuning during the one-week build.
 
 Select the winner by **validation average precision**, breaking ties using phishing recall at threshold `0.5`. Freeze the estimator, then fit sigmoid calibration using only the calibration partition. Evaluate the final pipeline once on the untouched test partition. [Calibration guidance](https://scikit-learn.org/stable/modules/calibration.html)
 
@@ -148,7 +143,7 @@ Use calibrated `predict_proba`, locating the phishing column through the model�
 | Medium risk | Score from 30 to below 70 |
 | High risk | Score at least 70 |
 
-Calculate boundaries before rounding. Explain that the category uses a 50% threshold while the bands summarize the estimated risk.
+Calculate boundaries before rounding. The table describes the model estimate. Keep the primary caution assessment separate: a lookalike-domain signal gives High caution and review-required wording without changing the learned probability; Medium scores show uncertainty.
 
 **Indicators**
 
@@ -156,7 +151,7 @@ Display IP hosts, `@`, at least three subdomains, URLs longer than 75 characters
 
 For the TLD indicator, use training-set evidence: flag suffixes with at least 100 training examples and a phishing share of at least 70%. Label this **“TLD associated with phishing in this dataset.”** Keep this lookup separate from predictive features.
 
-Indicators describe observed patterns; they do not automatically override the model.
+Structural indicators describe observed patterns. Add separate, documented brand-lookalike checks for digit substitutions, typos, selected Unicode confusables, affixes, and misleading subdomains. These can require review in the primary assessment while preserving the model score. Catalogue matches never establish safety or reduce a score.
 
 **Model Insights**
 
@@ -164,7 +159,7 @@ Show the model comparison, held-out metrics, confusion matrix, calibration plot,
 
 **Internal interface**
 
-Expose `analyze_url(url: str) -> PredictionResult`, returning the normalized URL, hostname, category, phishing probability, risk score, risk band, indicators, and model version. Keep this independent of Streamlit; no REST API is needed for version one.
+Expose `analyze_url(url, bundle) -> PredictionResult`, returning normalized URL, hostname, model class/probability/score/band, independent caution category/band/basis, domain signals, indicators, and model version. A spelling warning requires review without overwriting `predict_proba`; display the score separately when the warning disagrees. Keep this independent of Streamlit; no REST API is needed for version one.
 
 Display:
 

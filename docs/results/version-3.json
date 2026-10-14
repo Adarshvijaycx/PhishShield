@@ -1,0 +1,1686 @@
+{
+  "description": "Registered version 3 evaluation and separate offline behavior review; not live reputation verification.",
+  "model": {
+    "model_name": "PhishShield",
+    "model_version": 3,
+    "run_id": "e3c4c481ca7346aba76ab9a6e8da87f4",
+    "algorithm": "Random Forest",
+    "created_at": "2026-10-14T18:00:43.925741+00:00",
+    "feature_version": "1.1.0",
+    "dataset_checksum": "5deb33152a2dbe8a97de2aacd037ad13071b5a42c9005240c75d6fcc5ee972fe",
+    "dataset_source": "https://data.mendeley.com/datasets/c2gw7fy2j4/3",
+    "dataset_kind": "hannousse",
+    "dataset_provenance": {
+      "dataset_kind": "hannousse",
+      "source": "https://data.mendeley.com/datasets/c2gw7fy2j4/3",
+      "label_column": "status",
+      "csv_sha256": "5deb33152a2dbe8a97de2aacd037ad13071b5a42c9005240c75d6fcc5ee972fe",
+      "license": "CC BY 4.0",
+      "authors": [
+        "Abdelhakim Hannousse",
+        "Salima Yahiouche"
+      ],
+      "mirror": "https://huggingface.co/datasets/pirocheto/phishing-url",
+      "mirror_revision": "1375d450d4540205ac11781b807249c9509739cd",
+      "source_files": [
+        {
+          "url": "https://huggingface.co/datasets/pirocheto/phishing-url/resolve/1375d450d4540205ac11781b807249c9509739cd/data/train.parquet",
+          "sha256": "79a776a41e7f5c8a51d24ec6802284887fbdee296c5e09e8d881fc6c4852cc43",
+          "rows": 7658
+        },
+        {
+          "url": "https://huggingface.co/datasets/pirocheto/phishing-url/resolve/1375d450d4540205ac11781b807249c9509739cd/data/test.parquet",
+          "sha256": "8131f6e48b58136dac0222b419104d19d7d47938483d0a458403113750222a07",
+          "rows": 3772
+        }
+      ],
+      "changes": "Recombined mirror train/test files; retained only raw URL and status; original partitions discarded.",
+      "raw_rows": 11430
+    },
+    "dataset_url_profiles": {
+      "legitimate": {
+        "https": 0.4453590192644483,
+        "nonroot_path": 0.612784588441331,
+        "query": 0.033450087565674254,
+        "www": 0.668476357267951
+      },
+      "phishing": {
+        "https": 0.333274864058937,
+        "nonroot_path": 0.8031924223820383,
+        "query": 0.23715137695141203,
+        "www": 0.2059287844237853
+      }
+    },
+    "model_scope": "full_url",
+    "model_features": [
+      "url_length",
+      "hostname_length",
+      "registered_domain_length",
+      "path_length",
+      "query_length",
+      "fragment_length",
+      "tld_length",
+      "subdomain_count",
+      "path_depth",
+      "query_parameter_count",
+      "digit_count",
+      "digit_ratio",
+      "hostname_digit_ratio",
+      "special_character_count",
+      "dot_count",
+      "hyphen_count",
+      "hostname_hyphen_count",
+      "at_count",
+      "percent_count",
+      "slash_count",
+      "question_mark_count",
+      "equals_count",
+      "ampersand_count",
+      "keyword_count",
+      "has_ip",
+      "has_https",
+      "has_userinfo",
+      "has_nonstandard_port",
+      "has_punycode",
+      "hostname_entropy"
+    ],
+    "assessment_policy": "independent_domain_warnings_v1",
+    "probability_scope": "Historical full-URL lexical estimate; no live reputation or website verification",
+    "model_sha256": "8c1407b76ab0f0ee61b64b2f76d0ccce44e9341ccaac0de3fdc9019945786c5c",
+    "threshold": 0.5,
+    "risk_bands": {
+      "low": 30,
+      "high": 70
+    },
+    "metrics": {
+      "accuracy": 0.8199588477366255,
+      "precision": 0.8648648648648649,
+      "recall": 0.7579814624098867,
+      "f1": 0.8079034028540066,
+      "average_precision": 0.9078136458887611,
+      "roc_auc": 0.9066087133235886,
+      "false_positive_rate": 0.11819116135662898,
+      "brier_score": 0.12805593062946538,
+      "log_loss": 0.40704657832030633
+    },
+    "tld_statistics": {
+      "ac.ae": {
+        "count": 1,
+        "phishing_rate": 0.0
+      },
+      "ac.at": {
+        "count": 1,
+        "phishing_rate": 0.0
+      },
+      "ac.id": {
+        "count": 12,
+        "phishing_rate": 0.6666666666666666
+      },
+      "ac.in": {
+        "count": 3,
+        "phishing_rate": 0.0
+      },
+      "ac.lk": {
+        "count": 1,
+        "phishing_rate": 0.0
+      },
+      "ac.th": {
+        "count": 7,
+        "phishing_rate": 1.0
+      },
+      "ac.uk": {
+        "count": 4,
+        "phishing_rate": 0.0
+      },
+      "ad": {
+        "count": 1,
+        "phishing_rate": 0.0
+      },
+      "ae": {
+        "count": 2,
+        "phishing_rate": 0.5
+      },
+      "aero": {
+        "count": 1,
+        "phishing_rate": 0.0
+      },
+      "al": {
+        "count": 2,
+        "phishing_rate": 0.5
+      },
+      "am": {
+        "count": 3,
+        "phishing_rate": 0.6666666666666666
+      },
+      "ap-southeast-2.compute.amazonaws.com": {
+        "count": 1,
+        "phishing_rate": 1.0
+      },
+      "app": {
+        "count": 1,
+        "phishing_rate": 1.0
+      },
+      "appspot.com": {
+        "count": 3,
+        "phishing_rate": 1.0
+      },
+      "art": {
+        "count": 1,
+        "phishing_rate": 1.0
+      },
+      "as": {
+        "count": 2,
+        "phishing_rate": 1.0
+      },
+      "asia": {
+        "count": 1,
+        "phishing_rate": 1.0
+      },
+      "at": {
+        "count": 10,
+        "phishing_rate": 0.4
+      },
+      "audio": {
+        "count": 1,
+        "phishing_rate": 0.0
+      },
+      "az": {
+        "count": 4,
+        "phishing_rate": 0.25
+      },
+      "azurewebsites.net": {
+        "count": 2,
+        "phishing_rate": 0.5
+      },
+      "bayern": {
+        "count": 1,
+        "phishing_rate": 0.0
+      },
+      "be": {
+        "count": 21,
+        "phishing_rate": 0.9047619047619048
+      },
+      "bg": {
+        "count": 4,
+        "phishing_rate": 0.25
+      },
+      "biella.it": {
+        "count": 1,
+        "phishing_rate": 0.0
+      },
+      "biz": {
+        "count": 4,
+        "phishing_rate": 0.75
+      },
+      "bj": {
+        "count": 1,
+        "phishing_rate": 0.0
+      },
+      "blob.core.windows.net": {
+        "count": 2,
+        "phishing_rate": 1.0
+      },
+      "blog.br": {
+        "count": 1,
+        "phishing_rate": 1.0
+      },
+      "blogspot.com": {
+        "count": 222,
+        "phishing_rate": 0.6891891891891891
+      },
+      "bologna.it": {
+        "count": 1,
+        "phishing_rate": 0.0
+      },
+      "br.com": {
+        "count": 1,
+        "phishing_rate": 0.0
+      },
+      "brussels": {
+        "count": 1,
+        "phishing_rate": 0.0
+      },
+      "buzz": {
+        "count": 1,
+        "phishing_rate": 1.0
+      },
+      "by": {
+        "count": 7,
+        "phishing_rate": 0.2857142857142857
+      },
+      "bz": {
+        "count": 3,
+        "phishing_rate": 1.0
+      },
+      "ca": {
+        "count": 25,
+        "phishing_rate": 0.48
+      },
+      "canon": {
+        "count": 1,
+        "phishing_rate": 0.0
+      },
+      "cat": {
+        "count": 2,
+        "phishing_rate": 0.5
+      },
+      "cc": {
+        "count": 15,
+        "phishing_rate": 1.0
+      },
+      "center": {
+        "count": 1,
+        "phishing_rate": 1.0
+      },
+      "ch": {
+        "count": 18,
+        "phishing_rate": 0.05555555555555555
+      },
+      "cheap": {
+        "count": 1,
+        "phishing_rate": 1.0
+      },
+      "ci": {
+        "count": 4,
+        "phishing_rate": 1.0
+      },
+      "city": {
+        "count": 1,
+        "phishing_rate": 0.0
+      },
+      "cl": {
+        "count": 16,
+        "phishing_rate": 0.875
+      },
+      "cloud.goog": {
+        "count": 1,
+        "phishing_rate": 1.0
+      },
+      "cloudaccess.host": {
+        "count": 2,
+        "phishing_rate": 1.0
+      },
+      "cloudaccess.net": {
+        "count": 3,
+        "phishing_rate": 0.6666666666666666
+      },
+      "cloudfront.net": {
+        "count": 3,
+        "phishing_rate": 1.0
+      },
+      "cloudns.asia": {
+        "count": 2,
+        "phishing_rate": 1.0
+      },
+      "cloudns.cx": {
+        "count": 1,
+        "phishing_rate": 1.0
+      },
+      "club": {
+        "count": 3,
+        "phishing_rate": 1.0
+      },
+      "cn": {
+        "count": 16,
+        "phishing_rate": 1.0
+      },
+      "co": {
+        "count": 28,
+        "phishing_rate": 0.8214285714285714
+      },
+      "co.at": {
+        "count": 1,
+        "phishing_rate": 0.0
+      },
+      "co.id": {
+        "count": 10,
+        "phishing_rate": 0.6
+      },
+      "co.il": {
+        "count": 6,
+        "phishing_rate": 0.6666666666666666
+      },
+      "co.in": {
+        "count": 12,
+        "phishing_rate": 0.8333333333333334
+      },
+      "co.jp": {
+        "count": 1,
+        "phishing_rate": 1.0
+      },
+      "co.kr": {
+        "count": 12,
+        "phishing_rate": 0.75
+      },
+      "co.nz": {
+        "count": 2,
+        "phishing_rate": 0.0
+      },
+      "co.rs": {
+        "count": 2,
+        "phishing_rate": 1.0
+      },
+      "co.th": {
+        "count": 3,
+        "phishing_rate": 1.0
+      },
+      "co.ua": {
+        "count": 1,
+        "phishing_rate": 1.0
+      },
+      "co.uk": {
+        "count": 109,
+        "phishing_rate": 0.44954128440366975
+      },
+      "co.uz": {
+        "count": 1,
+        "phishing_rate": 0.0
+      },
+      "co.za": {
+        "count": 21,
+        "phishing_rate": 0.5238095238095238
+      },
+      "co.zw": {
+        "count": 2,
+        "phishing_rate": 1.0
+      },
+      "coffee": {
+        "count": 1,
+        "phishing_rate": 0.0
+      },
+      "com": {
+        "count": 3205,
+        "phishing_rate": 0.36942277691107644
+      },
+      "com.ar": {
+        "count": 24,
+        "phishing_rate": 0.75
+      },
+      "com.au": {
+        "count": 65,
+        "phishing_rate": 0.5692307692307692
+      },
+      "com.bd": {
+        "count": 2,
+        "phishing_rate": 1.0
+      },
+      "com.br": {
+        "count": 37,
+        "phishing_rate": 0.6486486486486487
+      },
+      "com.co": {
+        "count": 2,
+        "phishing_rate": 1.0
+      },
+      "com.et": {
+        "count": 1,
+        "phishing_rate": 0.0
+      },
+      "com.hk": {
+        "count": 6,
+        "phishing_rate": 0.5
+      },
+      "com.jo": {
+        "count": 1,
+        "phishing_rate": 0.0
+      },
+      "com.mx": {
+        "count": 13,
+        "phishing_rate": 0.5384615384615384
+      },
+      "com.my": {
+        "count": 5,
+        "phishing_rate": 0.8
+      },
+      "com.ng": {
+        "count": 9,
+        "phishing_rate": 0.7777777777777778
+      },
+      "com.om": {
+        "count": 1,
+        "phishing_rate": 0.0
+      },
+      "com.pe": {
+        "count": 5,
+        "phishing_rate": 1.0
+      },
+      "com.ph": {
+        "count": 2,
+        "phishing_rate": 1.0
+      },
+      "com.pk": {
+        "count": 2,
+        "phishing_rate": 1.0
+      },
+      "com.pl": {
+        "count": 4,
+        "phishing_rate": 0.75
+      },
+      "com.pt": {
+        "count": 1,
+        "phishing_rate": 0.0
+      },
+      "com.py": {
+        "count": 4,
+        "phishing_rate": 1.0
+      },
+      "com.ru": {
+        "count": 1,
+        "phishing_rate": 0.0
+      },
+      "com.sa": {
+        "count": 1,
+        "phishing_rate": 0.0
+      },
+      "com.sg": {
+        "count": 3,
+        "phishing_rate": 0.6666666666666666
+      },
+      "com.tr": {
+        "count": 7,
+        "phishing_rate": 0.8571428571428571
+      },
+      "com.tw": {
+        "count": 4,
+        "phishing_rate": 0.25
+      },
+      "com.ua": {
+        "count": 11,
+        "phishing_rate": 0.2727272727272727
+      },
+      "com.ve": {
+        "count": 2,
+        "phishing_rate": 1.0
+      },
+      "com.vn": {
+        "count": 9,
+        "phishing_rate": 1.0
+      },
+      "csb.app": {
+        "count": 6,
+        "phishing_rate": 1.0
+      },
+      "cx": {
+        "count": 1,
+        "phishing_rate": 0.0
+      },
+      "cz": {
+        "count": 33,
+        "phishing_rate": 0.5151515151515151
+      },
+      "de": {
+        "count": 90,
+        "phishing_rate": 0.25555555555555554
+      },
+      "df.r.appspot.com": {
+        "count": 10,
+        "phishing_rate": 1.0
+      },
+      "dk": {
+        "count": 14,
+        "phishing_rate": 0.35714285714285715
+      },
+      "dns-cloud.net": {
+        "count": 7,
+        "phishing_rate": 1.0
+      },
+      "do": {
+        "count": 9,
+        "phishing_rate": 1.0
+      },
+      "dog": {
+        "count": 1,
+        "phishing_rate": 0.0
+      },
+      "du.r.appspot.com": {
+        "count": 2,
+        "phishing_rate": 1.0
+      },
+      "duckdns.org": {
+        "count": 4,
+        "phishing_rate": 1.0
+      },
+      "dynu.net": {
+        "count": 1,
+        "phishing_rate": 0.0
+      },
+      "edu": {
+        "count": 51,
+        "phishing_rate": 0.0196078431372549
+      },
+      "edu.ar": {
+        "count": 3,
+        "phishing_rate": 0.0
+      },
+      "edu.au": {
+        "count": 1,
+        "phishing_rate": 0.0
+      },
+      "edu.bh": {
+        "count": 1,
+        "phishing_rate": 0.0
+      },
+      "edu.hk": {
+        "count": 2,
+        "phishing_rate": 0.0
+      },
+      "edu.in": {
+        "count": 4,
+        "phishing_rate": 0.25
+      },
+      "edu.kh": {
+        "count": 1,
+        "phishing_rate": 1.0
+      },
+      "edu.mt": {
+        "count": 1,
+        "phishing_rate": 0.0
+      },
+      "edu.mx": {
+        "count": 1,
+        "phishing_rate": 1.0
+      },
+      "edu.pl": {
+        "count": 1,
+        "phishing_rate": 0.0
+      },
+      "edu.sa": {
+        "count": 1,
+        "phishing_rate": 0.0
+      },
+      "edu.tr": {
+        "count": 2,
+        "phishing_rate": 0.5
+      },
+      "edu.vn": {
+        "count": 1,
+        "phishing_rate": 1.0
+      },
+      "ee": {
+        "count": 1,
+        "phishing_rate": 1.0
+      },
+      "el.r.appspot.com": {
+        "count": 53,
+        "phishing_rate": 1.0
+      },
+      "email": {
+        "count": 1,
+        "phishing_rate": 1.0
+      },
+      "es": {
+        "count": 26,
+        "phishing_rate": 0.5
+      },
+      "et.r.appspot.com": {
+        "count": 3,
+        "phishing_rate": 1.0
+      },
+      "eu": {
+        "count": 19,
+        "phishing_rate": 0.631578947368421
+      },
+      "exposed": {
+        "count": 7,
+        "phishing_rate": 0.8571428571428571
+      },
+      "fi": {
+        "count": 3,
+        "phishing_rate": 0.0
+      },
+      "firebaseapp.com": {
+        "count": 18,
+        "phishing_rate": 1.0
+      },
+      "fm": {
+        "count": 1,
+        "phishing_rate": 1.0
+      },
+      "fr": {
+        "count": 61,
+        "phishing_rate": 0.7868852459016393
+      },
+      "ga": {
+        "count": 1,
+        "phishing_rate": 1.0
+      },
+      "gb.net": {
+        "count": 1,
+        "phishing_rate": 1.0
+      },
+      "gd": {
+        "count": 1,
+        "phishing_rate": 1.0
+      },
+      "ge": {
+        "count": 2,
+        "phishing_rate": 0.5
+      },
+      "gg": {
+        "count": 1,
+        "phishing_rate": 0.0
+      },
+      "github.io": {
+        "count": 5,
+        "phishing_rate": 0.4
+      },
+      "glitch.me": {
+        "count": 2,
+        "phishing_rate": 1.0
+      },
+      "go.id": {
+        "count": 5,
+        "phishing_rate": 1.0
+      },
+      "go.th": {
+        "count": 1,
+        "phishing_rate": 0.0
+      },
+      "go.ug": {
+        "count": 1,
+        "phishing_rate": 1.0
+      },
+      "gob.mx": {
+        "count": 2,
+        "phishing_rate": 0.0
+      },
+      "gob.pe": {
+        "count": 2,
+        "phishing_rate": 0.5
+      },
+      "gouv.fr": {
+        "count": 1,
+        "phishing_rate": 0.0
+      },
+      "gov": {
+        "count": 20,
+        "phishing_rate": 0.0
+      },
+      "gov.au": {
+        "count": 2,
+        "phishing_rate": 0.0
+      },
+      "gov.in": {
+        "count": 4,
+        "phishing_rate": 0.0
+      },
+      "gov.it": {
+        "count": 1,
+        "phishing_rate": 0.0
+      },
+      "gov.la": {
+        "count": 1,
+        "phishing_rate": 1.0
+      },
+      "gov.ru": {
+        "count": 1,
+        "phishing_rate": 0.0
+      },
+      "gov.sg": {
+        "count": 1,
+        "phishing_rate": 0.0
+      },
+      "gov.tw": {
+        "count": 1,
+        "phishing_rate": 0.0
+      },
+      "gov.uk": {
+        "count": 3,
+        "phishing_rate": 0.0
+      },
+      "gq": {
+        "count": 3,
+        "phishing_rate": 1.0
+      },
+      "gr": {
+        "count": 21,
+        "phishing_rate": 0.42857142857142855
+      },
+      "group": {
+        "count": 1,
+        "phishing_rate": 1.0
+      },
+      "guru": {
+        "count": 2,
+        "phishing_rate": 0.0
+      },
+      "hants.sch.uk": {
+        "count": 1,
+        "phishing_rate": 0.0
+      },
+      "herokuapp.com": {
+        "count": 1,
+        "phishing_rate": 0.0
+      },
+      "hk": {
+        "count": 1,
+        "phishing_rate": 0.0
+      },
+      "hopto.org": {
+        "count": 1,
+        "phishing_rate": 0.0
+      },
+      "host": {
+        "count": 1,
+        "phishing_rate": 1.0
+      },
+      "house": {
+        "count": 2,
+        "phishing_rate": 1.0
+      },
+      "hr": {
+        "count": 12,
+        "phishing_rate": 0.8333333333333334
+      },
+      "hu": {
+        "count": 22,
+        "phishing_rate": 0.2727272727272727
+      },
+      "id": {
+        "count": 5,
+        "phishing_rate": 1.0
+      },
+      "ie": {
+        "count": 4,
+        "phishing_rate": 0.0
+      },
+      "il.us": {
+        "count": 1,
+        "phishing_rate": 0.0
+      },
+      "im": {
+        "count": 2,
+        "phishing_rate": 0.5
+      },
+      "in": {
+        "count": 24,
+        "phishing_rate": 0.6666666666666666
+      },
+      "in.rs": {
+        "count": 1,
+        "phishing_rate": 1.0
+      },
+      "in.ua": {
+        "count": 2,
+        "phishing_rate": 1.0
+      },
+      "info": {
+        "count": 17,
+        "phishing_rate": 0.7058823529411765
+      },
+      "int": {
+        "count": 2,
+        "phishing_rate": 0.0
+      },
+      "io": {
+        "count": 8,
+        "phishing_rate": 0.75
+      },
+      "ir": {
+        "count": 13,
+        "phishing_rate": 0.46153846153846156
+      },
+      "is": {
+        "count": 3,
+        "phishing_rate": 0.6666666666666666
+      },
+      "it": {
+        "count": 48,
+        "phishing_rate": 0.6041666666666666
+      },
+      "jobs": {
+        "count": 1,
+        "phishing_rate": 0.0
+      },
+      "jp": {
+        "count": 7,
+        "phishing_rate": 0.42857142857142855
+      },
+      "kinghost.net": {
+        "count": 1,
+        "phishing_rate": 1.0
+      },
+      "kr": {
+        "count": 4,
+        "phishing_rate": 1.0
+      },
+      "kz": {
+        "count": 4,
+        "phishing_rate": 0.75
+      },
+      "la": {
+        "count": 1,
+        "phishing_rate": 1.0
+      },
+      "li": {
+        "count": 1,
+        "phishing_rate": 1.0
+      },
+      "life": {
+        "count": 1,
+        "phishing_rate": 0.0
+      },
+      "link": {
+        "count": 3,
+        "phishing_rate": 1.0
+      },
+      "live": {
+        "count": 2,
+        "phishing_rate": 1.0
+      },
+      "lk": {
+        "count": 2,
+        "phishing_rate": 0.5
+      },
+      "london": {
+        "count": 1,
+        "phishing_rate": 0.0
+      },
+      "lt": {
+        "count": 2,
+        "phishing_rate": 0.0
+      },
+      "ltd": {
+        "count": 1,
+        "phishing_rate": 1.0
+      },
+      "lv": {
+        "count": 1,
+        "phishing_rate": 0.0
+      },
+      "lviv.ua": {
+        "count": 2,
+        "phishing_rate": 1.0
+      },
+      "ly": {
+        "count": 14,
+        "phishing_rate": 0.9285714285714286
+      },
+      "ma": {
+        "count": 3,
+        "phishing_rate": 1.0
+      },
+      "mcdir.ru": {
+        "count": 2,
+        "phishing_rate": 1.0
+      },
+      "mcpre.ru": {
+        "count": 1,
+        "phishing_rate": 1.0
+      },
+      "md": {
+        "count": 1,
+        "phishing_rate": 1.0
+      },
+      "me": {
+        "count": 7,
+        "phishing_rate": 0.42857142857142855
+      },
+      "me.uk": {
+        "count": 1,
+        "phishing_rate": 0.0
+      },
+      "media": {
+        "count": 1,
+        "phishing_rate": 0.0
+      },
+      "mil": {
+        "count": 4,
+        "phishing_rate": 0.0
+      },
+      "mk": {
+        "count": 3,
+        "phishing_rate": 0.6666666666666666
+      },
+      "mk.ua": {
+        "count": 1,
+        "phishing_rate": 0.0
+      },
+      "ml": {
+        "count": 2,
+        "phishing_rate": 1.0
+      },
+      "mn": {
+        "count": 3,
+        "phishing_rate": 0.6666666666666666
+      },
+      "mn.us": {
+        "count": 4,
+        "phishing_rate": 0.0
+      },
+      "msk.ru": {
+        "count": 1,
+        "phishing_rate": 1.0
+      },
+      "mu": {
+        "count": 8,
+        "phishing_rate": 1.0
+      },
+      "mx": {
+        "count": 9,
+        "phishing_rate": 1.0
+      },
+      "my.id": {
+        "count": 10,
+        "phishing_rate": 1.0
+      },
+      "myftp.org": {
+        "count": 1,
+        "phishing_rate": 0.0
+      },
+      "mypi.co": {
+        "count": 1,
+        "phishing_rate": 1.0
+      },
+      "net": {
+        "count": 205,
+        "phishing_rate": 0.5121951219512195
+      },
+      "net.au": {
+        "count": 4,
+        "phishing_rate": 0.0
+      },
+      "net.br": {
+        "count": 1,
+        "phishing_rate": 1.0
+      },
+      "net.co": {
+        "count": 1,
+        "phishing_rate": 1.0
+      },
+      "net.nz": {
+        "count": 1,
+        "phishing_rate": 1.0
+      },
+      "net.pe": {
+        "count": 2,
+        "phishing_rate": 1.0
+      },
+      "net.tr": {
+        "count": 1,
+        "phishing_rate": 1.0
+      },
+      "netlify.app": {
+        "count": 11,
+        "phishing_rate": 1.0
+      },
+      "network": {
+        "count": 1,
+        "phishing_rate": 0.0
+      },
+      "news": {
+        "count": 2,
+        "phishing_rate": 0.0
+      },
+      "nf": {
+        "count": 4,
+        "phishing_rate": 1.0
+      },
+      "ng": {
+        "count": 1,
+        "phishing_rate": 1.0
+      },
+      "nhs.uk": {
+        "count": 2,
+        "phishing_rate": 0.0
+      },
+      "nic.in": {
+        "count": 1,
+        "phishing_rate": 0.0
+      },
+      "nl": {
+        "count": 49,
+        "phishing_rate": 0.4489795918367347
+      },
+      "nn.r.appspot.com": {
+        "count": 5,
+        "phishing_rate": 1.0
+      },
+      "no": {
+        "count": 7,
+        "phishing_rate": 0.0
+      },
+      "nsw.edu.au": {
+        "count": 1,
+        "phishing_rate": 0.0
+      },
+      "nu": {
+        "count": 3,
+        "phishing_rate": 0.3333333333333333
+      },
+      "nw.r.appspot.com": {
+        "count": 10,
+        "phishing_rate": 1.0
+      },
+      "oa.r.appspot.com": {
+        "count": 5,
+        "phishing_rate": 1.0
+      },
+      "od.ua": {
+        "count": 1,
+        "phishing_rate": 0.0
+      },
+      "online": {
+        "count": 1,
+        "phishing_rate": 1.0
+      },
+      "onrender.com": {
+        "count": 1,
+        "phishing_rate": 1.0
+      },
+      "or.id": {
+        "count": 2,
+        "phishing_rate": 1.0
+      },
+      "org": {
+        "count": 283,
+        "phishing_rate": 0.19434628975265017
+      },
+      "org.ar": {
+        "count": 4,
+        "phishing_rate": 1.0
+      },
+      "org.br": {
+        "count": 1,
+        "phishing_rate": 0.0
+      },
+      "org.gr": {
+        "count": 1,
+        "phishing_rate": 1.0
+      },
+      "org.hk": {
+        "count": 3,
+        "phishing_rate": 0.0
+      },
+      "org.in": {
+        "count": 2,
+        "phishing_rate": 1.0
+      },
+      "org.mx": {
+        "count": 1,
+        "phishing_rate": 1.0
+      },
+      "org.np": {
+        "count": 1,
+        "phishing_rate": 1.0
+      },
+      "org.tr": {
+        "count": 1,
+        "phishing_rate": 0.0
+      },
+      "org.ua": {
+        "count": 1,
+        "phishing_rate": 0.0
+      },
+      "org.uk": {
+        "count": 6,
+        "phishing_rate": 0.16666666666666666
+      },
+      "org.zm": {
+        "count": 1,
+        "phishing_rate": 1.0
+      },
+      "ovh": {
+        "count": 1,
+        "phishing_rate": 1.0
+      },
+      "pe": {
+        "count": 9,
+        "phishing_rate": 0.8888888888888888
+      },
+      "ph": {
+        "count": 2,
+        "phishing_rate": 0.5
+      },
+      "pl": {
+        "count": 39,
+        "phishing_rate": 0.6666666666666666
+      },
+      "plus": {
+        "count": 1,
+        "phishing_rate": 0.0
+      },
+      "pm": {
+        "count": 3,
+        "phishing_rate": 0.6666666666666666
+      },
+      "pp.ua": {
+        "count": 1,
+        "phishing_rate": 0.0
+      },
+      "pro": {
+        "count": 11,
+        "phishing_rate": 0.6363636363636364
+      },
+      "pt": {
+        "count": 8,
+        "phishing_rate": 0.625
+      },
+      "pw": {
+        "count": 1,
+        "phishing_rate": 1.0
+      },
+      "qa": {
+        "count": 1,
+        "phishing_rate": 0.0
+      },
+      "qld.gov.au": {
+        "count": 1,
+        "phishing_rate": 0.0
+      },
+      "re": {
+        "count": 3,
+        "phishing_rate": 1.0
+      },
+      "repl.co": {
+        "count": 1,
+        "phishing_rate": 1.0
+      },
+      "repl.run": {
+        "count": 1,
+        "phishing_rate": 1.0
+      },
+      "rj.r.appspot.com": {
+        "count": 13,
+        "phishing_rate": 1.0
+      },
+      "ro": {
+        "count": 20,
+        "phishing_rate": 0.6
+      },
+      "rocks": {
+        "count": 1,
+        "phishing_rate": 0.0
+      },
+      "rs": {
+        "count": 4,
+        "phishing_rate": 1.0
+      },
+      "ru": {
+        "count": 198,
+        "phishing_rate": 0.4797979797979798
+      },
+      "ru.com": {
+        "count": 2,
+        "phishing_rate": 1.0
+      },
+      "s3-us-west-2.amazonaws.com": {
+        "count": 1,
+        "phishing_rate": 1.0
+      },
+      "s3.amazonaws.com": {
+        "count": 1,
+        "phishing_rate": 0.0
+      },
+      "sa": {
+        "count": 4,
+        "phishing_rate": 0.75
+      },
+      "sa.gov.au": {
+        "count": 1,
+        "phishing_rate": 0.0
+      },
+      "se": {
+        "count": 14,
+        "phishing_rate": 0.42857142857142855
+      },
+      "serveirc.com": {
+        "count": 1,
+        "phishing_rate": 1.0
+      },
+      "sexy": {
+        "count": 1,
+        "phishing_rate": 0.0
+      },
+      "sg": {
+        "count": 4,
+        "phishing_rate": 0.25
+      },
+      "sh": {
+        "count": 5,
+        "phishing_rate": 1.0
+      },
+      "shop": {
+        "count": 1,
+        "phishing_rate": 1.0
+      },
+      "si": {
+        "count": 6,
+        "phishing_rate": 0.6666666666666666
+      },
+      "site": {
+        "count": 6,
+        "phishing_rate": 1.0
+      },
+      "sk": {
+        "count": 19,
+        "phishing_rate": 0.631578947368421
+      },
+      "sn": {
+        "count": 1,
+        "phishing_rate": 1.0
+      },
+      "so": {
+        "count": 1,
+        "phishing_rate": 1.0
+      },
+      "social": {
+        "count": 1,
+        "phishing_rate": 1.0
+      },
+      "software": {
+        "count": 1,
+        "phishing_rate": 0.0
+      },
+      "space": {
+        "count": 1,
+        "phishing_rate": 1.0
+      },
+      "srv.br": {
+        "count": 1,
+        "phishing_rate": 1.0
+      },
+      "stargard.pl": {
+        "count": 1,
+        "phishing_rate": 1.0
+      },
+      "su": {
+        "count": 5,
+        "phishing_rate": 0.0
+      },
+      "sydney": {
+        "count": 1,
+        "phishing_rate": 1.0
+      },
+      "sytes.net": {
+        "count": 1,
+        "phishing_rate": 1.0
+      },
+      "td": {
+        "count": 1,
+        "phishing_rate": 0.0
+      },
+      "team": {
+        "count": 1,
+        "phishing_rate": 1.0
+      },
+      "tj": {
+        "count": 1,
+        "phishing_rate": 1.0
+      },
+      "tk": {
+        "count": 9,
+        "phishing_rate": 1.0
+      },
+      "tl": {
+        "count": 1,
+        "phishing_rate": 1.0
+      },
+      "tn": {
+        "count": 1,
+        "phishing_rate": 0.0
+      },
+      "to": {
+        "count": 9,
+        "phishing_rate": 0.7777777777777778
+      },
+      "today": {
+        "count": 17,
+        "phishing_rate": 0.058823529411764705
+      },
+      "top": {
+        "count": 9,
+        "phishing_rate": 0.7777777777777778
+      },
+      "ts.r.appspot.com": {
+        "count": 4,
+        "phishing_rate": 1.0
+      },
+      "tv": {
+        "count": 11,
+        "phishing_rate": 0.36363636363636365
+      },
+      "tw": {
+        "count": 3,
+        "phishing_rate": 0.6666666666666666
+      },
+      "ua": {
+        "count": 4,
+        "phishing_rate": 0.5
+      },
+      "uc.r.appspot.com": {
+        "count": 6,
+        "phishing_rate": 1.0
+      },
+      "ue.r.appspot.com": {
+        "count": 2,
+        "phishing_rate": 1.0
+      },
+      "uk": {
+        "count": 3,
+        "phishing_rate": 0.6666666666666666
+      },
+      "uk.com": {
+        "count": 1,
+        "phishing_rate": 1.0
+      },
+      "uk.r.appspot.com": {
+        "count": 2,
+        "phishing_rate": 1.0
+      },
+      "us": {
+        "count": 17,
+        "phishing_rate": 0.6470588235294118
+      },
+      "vc": {
+        "count": 1,
+        "phishing_rate": 0.0
+      },
+      "vercel.app": {
+        "count": 4,
+        "phishing_rate": 1.0
+      },
+      "vic.gov.au": {
+        "count": 1,
+        "phishing_rate": 0.0
+      },
+      "vip": {
+        "count": 1,
+        "phishing_rate": 1.0
+      },
+      "vn": {
+        "count": 7,
+        "phishing_rate": 0.42857142857142855
+      },
+      "vu": {
+        "count": 1,
+        "phishing_rate": 1.0
+      },
+      "waw.pl": {
+        "count": 1,
+        "phishing_rate": 0.0
+      },
+      "web.app": {
+        "count": 9,
+        "phishing_rate": 1.0
+      },
+      "web.id": {
+        "count": 1,
+        "phishing_rate": 1.0
+      },
+      "webflow.io": {
+        "count": 3,
+        "phishing_rate": 1.0
+      },
+      "wf": {
+        "count": 1,
+        "phishing_rate": 1.0
+      },
+      "wiki": {
+        "count": 1,
+        "phishing_rate": 0.0
+      },
+      "wl.r.appspot.com": {
+        "count": 9,
+        "phishing_rate": 1.0
+      },
+      "wm.r.appspot.com": {
+        "count": 3,
+        "phishing_rate": 1.0
+      },
+      "wn.r.appspot.com": {
+        "count": 4,
+        "phishing_rate": 1.0
+      },
+      "work": {
+        "count": 1,
+        "phishing_rate": 1.0
+      },
+      "world": {
+        "count": 1,
+        "phishing_rate": 1.0
+      },
+      "xn--p1acf": {
+        "count": 1,
+        "phishing_rate": 1.0
+      },
+      "xyz": {
+        "count": 9,
+        "phishing_rate": 1.0
+      },
+      "yolasite.com": {
+        "count": 6,
+        "phishing_rate": 1.0
+      },
+      "zone": {
+        "count": 1,
+        "phishing_rate": 0.0
+      },
+      "zp.ua": {
+        "count": 1,
+        "phishing_rate": 0.0
+      }
+    },
+    "dependency_versions": {
+      "scikit-learn": "1.9.1",
+      "numpy": "2.5.4",
+      "pandas": "2.3.3",
+      "scipy": "1.18.1",
+      "joblib": "1.6.0",
+      "tldextract": "5.4.0",
+      "mlflow": "3.17.1",
+      "python": "3.13.2"
+    },
+    "code_revision": "af97d31ab2ad7d97f355d6996b5a4bbe2ba7c472",
+    "source_file_sha256": {
+      "app.py": "c5ee8aec0bf4eef1681f348260cd74c730ee11d663c024e1d4fa30b94bf0abb7",
+      "pyproject.toml": "c7255c404e8638eff9a72d05b186f65ae0235276713e260e99e672e99c7445d3",
+      "requirements.lock": "379a7ac3deac8cefc1ca987bb572552a31a33f9ea5d0ff4e10e8caee7269e60b",
+      "src/phishshield/__init__.py": "c1da31b75ee40969b12cb8c8d907b4cd606d70694c7ecf1ac02f64120971c698",
+      "src/phishshield/cli.py": "dbe99b38d42a029102d29e265b2f12f25a13096750f5569406d2111f2be6f559",
+      "src/phishshield/data.py": "221d2bf4feb0ae59682809697b8258eb88ebba20fe09c717ffe2d06bcff09d4e",
+      "src/phishshield/domain_signals.py": "c2ac1b87bc044d204cdbe298eab9d5b2c3177607a43d1ee31b26a3e976efdcaa",
+      "src/phishshield/features.py": "514230bda94a0badbab086e5e9f1b754814b6ad2ad8cc86e6ac105d87e7e5221",
+      "src/phishshield/inference.py": "7a7a170a6c014b5be8ed61135e4024506e1adcb5c927916007f6c5596e0b747a",
+      "src/phishshield/training.py": "18bbc36168e701ab0e6003c34ff3f1404163d1f4fed051b6d76b9cd805e25aab"
+    },
+    "domain_warning_version": "1.0.0",
+    "selection_run_id": "3b241a79bf8c49c39d98572a582f9316",
+    "selection_metric": "validation_average_precision",
+    "selection_score": 0.9734703721394871,
+    "split_seed": 43,
+    "training_rows": 6158,
+    "validation_rows": 2011,
+    "calibration_rows": 1298,
+    "test_rows": 1944
+  },
+  "dataset": {
+    "dataset_source": "https://data.mendeley.com/datasets/c2gw7fy2j4/3",
+    "dataset_kind": "hannousse",
+    "dataset_provenance": {
+      "dataset_kind": "hannousse",
+      "source": "https://data.mendeley.com/datasets/c2gw7fy2j4/3",
+      "label_column": "status",
+      "csv_sha256": "5deb33152a2dbe8a97de2aacd037ad13071b5a42c9005240c75d6fcc5ee972fe",
+      "license": "CC BY 4.0",
+      "authors": [
+        "Abdelhakim Hannousse",
+        "Salima Yahiouche"
+      ],
+      "mirror": "https://huggingface.co/datasets/pirocheto/phishing-url",
+      "mirror_revision": "1375d450d4540205ac11781b807249c9509739cd",
+      "source_files": [
+        {
+          "url": "https://huggingface.co/datasets/pirocheto/phishing-url/resolve/1375d450d4540205ac11781b807249c9509739cd/data/train.parquet",
+          "sha256": "79a776a41e7f5c8a51d24ec6802284887fbdee296c5e09e8d881fc6c4852cc43",
+          "rows": 7658
+        },
+        {
+          "url": "https://huggingface.co/datasets/pirocheto/phishing-url/resolve/1375d450d4540205ac11781b807249c9509739cd/data/test.parquet",
+          "sha256": "8131f6e48b58136dac0222b419104d19d7d47938483d0a458403113750222a07",
+          "rows": 3772
+        }
+      ],
+      "changes": "Recombined mirror train/test files; retained only raw URL and status; original partitions discarded.",
+      "raw_rows": 11430
+    },
+    "url_format_profile_by_class": {
+      "legitimate": {
+        "https": 0.4453590192644483,
+        "nonroot_path": 0.612784588441331,
+        "query": 0.033450087565674254,
+        "www": 0.668476357267951
+      },
+      "phishing": {
+        "https": 0.333274864058937,
+        "nonroot_path": 0.8031924223820383,
+        "query": 0.23715137695141203,
+        "www": 0.2059287844237853
+      }
+    },
+    "original_label_mapping": {
+      "legitimate": "legitimate",
+      "phishing": "phishing"
+    },
+    "internal_label_mapping": {
+      "0": "legitimate",
+      "1": "phishing"
+    },
+    "raw_rows": 11430,
+    "missing_url_or_label_rows": 0,
+    "invalid_url_rows": 8,
+    "conflicting_normalized_urls": 0,
+    "conflicting_label_rows_removed": 0,
+    "duplicate_rows_removed": 11,
+    "usable_rows_before_sampling": 11411,
+    "selected_rows": 11411,
+    "domain_groups": 7259,
+    "class_counts": {
+      "legitimate": 5710,
+      "phishing": 5701
+    },
+    "sampling_seed": 43,
+    "dataset_checksum": "5deb33152a2dbe8a97de2aacd037ad13071b5a42c9005240c75d6fcc5ee972fe",
+    "requested_split_fractions": {
+      "train": 0.6,
+      "validation": 0.15,
+      "calibration": 0.1,
+      "test": 0.15
+    },
+    "splits": {
+      "calibration": {
+        "rows": 1298,
+        "row_fraction": 0.11374989045657699,
+        "groups": 726,
+        "legitimate_rows": 631,
+        "phishing_rows": 667
+      },
+      "test": {
+        "rows": 1944,
+        "row_fraction": 0.17036193146963458,
+        "groups": 1089,
+        "legitimate_rows": 973,
+        "phishing_rows": 971
+      },
+      "train": {
+        "rows": 6158,
+        "row_fraction": 0.5396547191306634,
+        "groups": 4355,
+        "legitimate_rows": 3304,
+        "phishing_rows": 2854
+      },
+      "validation": {
+        "rows": 2011,
+        "row_fraction": 0.17623345894312506,
+        "groups": 1089,
+        "legitimate_rows": 802,
+        "phishing_rows": 1209
+      }
+    },
+    "split_seed": 43,
+    "domain_overlap": 0
+  },
+  "behavior_review": {
+    "purpose": "Behavioral review; not an independently labeled phishing benchmark",
+    "not_used_for_selection_or_calibration": true,
+    "cases": [
+      {
+        "url": "https://mail.g0ogle.com/",
+        "model_score": 6.37117853318917,
+        "model_band": "Low",
+        "domain_warning_codes": [
+          "brand_digit_substitution"
+        ],
+        "assessment": "High caution; review required"
+      },
+      {
+        "url": "https://mail.googletex.com/",
+        "model_score": 4.551989648337151,
+        "model_band": "Low",
+        "domain_warning_codes": [
+          "brand_affix"
+        ],
+        "assessment": "High caution; review required"
+      },
+      {
+        "url": "https://www.youtube.com/watch?v=HsZxZ8hoYdU",
+        "model_score": 3.9099788627944188,
+        "model_band": "Low",
+        "domain_warning_codes": [],
+        "assessment": "Low"
+      },
+      {
+        "url": "https://mail.google.com/",
+        "model_score": 4.714235259337534,
+        "model_band": "Low",
+        "domain_warning_codes": [],
+        "assessment": "Low"
+      },
+      {
+        "url": "https://www.google.com/search?q=python",
+        "model_score": 7.329332345491067,
+        "model_band": "Low",
+        "domain_warning_codes": [],
+        "assessment": "Low"
+      },
+      {
+        "url": "https://www.example.com/about?topic=python#intro",
+        "model_score": 6.311541114595914,
+        "model_band": "Low",
+        "domain_warning_codes": [],
+        "assessment": "Low"
+      },
+      {
+        "url": "https://www.example.com/",
+        "model_score": 3.974117604584614,
+        "model_band": "Low",
+        "domain_warning_codes": [],
+        "assessment": "Low"
+      },
+      {
+        "url": "http://secure-account.example.org/login/verify?account=update",
+        "model_score": 84.02530564190188,
+        "model_band": "High",
+        "domain_warning_codes": [],
+        "assessment": "High"
+      },
+      {
+        "url": "http://example.com@192.0.2.10/verify-account",
+        "model_score": 92.12342377994544,
+        "model_band": "High",
+        "domain_warning_codes": [],
+        "assessment": "High"
+      },
+      {
+        "url": "https://youtube.com.unrelated.test/watch?v=example",
+        "model_score": 62.076260702577,
+        "model_band": "Medium",
+        "domain_warning_codes": [
+          "brand_in_subdomain"
+        ],
+        "assessment": "High caution; review required"
+      }
+    ]
+  },
+  "limitations": "Historical URL-only corpus; incomplete spelling catalogue; classifier metrics exclude advisory rules; different cohort from version 2."
+}

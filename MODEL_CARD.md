@@ -2,55 +2,69 @@
 
 ## Current release
 
-- Purpose: an academic demonstration of phishing URL classification and MLflow lifecycle tracking.
+- Purpose: academic URL classification, transparent warning signals, and MLflow lifecycle tracking.
 - Algorithm: Random Forest, followed by sigmoid probability calibration.
-- Registered model: `PhishShield`, version **2**, aliases `candidate` and `champion`.
-- MLflow run: `974bbf9d17a34b4287f70d2b77a315dd`.
-- Feature version: **1.1.0**, 30 offline URL features.
-- Decision: legitimate=0, phishing=1; predicted phishing when calibrated probability is at least 0.5.
-- Risk bands: below 30 Low; 30 to below 70 Medium; at least 70 High.
+- Registered model: `PhishShield`, version **3**, aliases `candidate` and `champion`.
+- MLflow run: `e3c4c481ca7346aba76ab9a6e8da87f4`.
+- Feature version: **1.1.0**, 30 offline numeric URL features shared by training and inference.
+- Model class: legitimate=0, phishing=1; phishing at calibrated probability ≥0.5.
+- Model bands: below 30 Low; 30 to below 70 Medium; at least 70 High.
+- Independent assessment: a domain warning gives High caution and a review-required result without changing the model probability. Medium model estimates show an uncertain assessment.
 
-## Data and evaluation
+## Dataset and provenance
 
-[UCI PhiUSIIL](https://archive.ics.uci.edu/dataset/967/phiusiil%2Bphishing%2Burl%2Bwebsite%2Bdataset), donated in 2024 and licensed CC BY 4.0. Attribution: Prasad, A. and Chandra, S. (2024), *PhiUSIIL Phishing URL (Website)*, UCI Machine Learning Repository.
+Hannousse, A. and Yahiouche, S. (2021), [*Web page phishing detection*, version 3](https://data.mendeley.com/datasets/c2gw7fy2j4/3), DOI 10.17632/c2gw7fy2j4.3, **CC BY 4.0**, collected May 2020. The original dataset includes webpage and external-service features; this project reads only raw URL and string `status` labels.
 
-Only raw URLs and labels are used. The provided webpage/statistical features are excluded. Original 0=phishing and 1=legitimate labels are remapped to 1=phishing and 0=legitimate.
+The public [Hugging Face mirror](https://huggingface.co/datasets/pirocheto/phishing-url/tree/1375d450d4540205ac11781b807249c9509739cd) is pinned at revision `1375d450d4540205ac11781b807249c9509739cd`. Its two original partitions are recombined before fresh domain-disjoint splitting. The downloader records both source-file hashes and the derived CSV hash in a provenance sidecar; cleaning verifies that metadata matches the CSV. This is a third-party mirror, rather than independently verified original-source byte equivalence.
 
-- Raw rows: 235,795.
-- Normalized duplicates removed: 897.
-- Conflicting-label rows removed: 2, belonging to one equivalent normalized URL.
-- Usable rows: 234,896, including 134,849 legitimate and 100,047 phishing URLs.
-- Training: 142,384; validation: 33,866; calibration: 24,442; test: 34,204.
-- No domain group overlaps between partitions; seed 42.
+- Raw rows: 11,430 (5,715 of each original class).
+- Invalid URLs removed: 8; normalized duplicates removed: 11; conflicting labels: 0.
+- Usable rows: 11,411 (5,710 legitimate, 5,701 phishing).
+- Effective domain groups: 7,259.
+- Training: 6,158; validation: 2,011; calibration: 1,298; test: 1,944.
+- Domain overlap across partitions: 0; final release seed: 43.
+- Legitimate profile after cleaning: 61.28% nonroot paths, 44.54% HTTPS, 66.85% `www`, 3.35% with queries. These fractions describe the collection and are not safety rules.
 
-Candidate selection uses validation average precision, with phishing recall as the tie-breaker. The winner's base estimator remains frozen; calibration uses only calibration rows. The final test partition is evaluated after selection. Feature importance uses a separate sampled validation calculation.
+An exploratory seed-42 audit identified the source bias and compared full-URL versus domain-only features. This release uses a fixed seed-43 split and the full-URL family; candidate selection uses only validation average precision, with phishing recall as tie-breaker. The selected estimator remains frozen while sigmoid calibration fits on separate calibration rows. Final figures below refer to this release's test partition. Seed-42 audit figures are not reported as final results.
 
-| Held-out metric | Result |
+## Measured evaluation
+
+| Held-out metric | Version 3 |
 |---|---:|
-| Accuracy | 98.35% |
-| Phishing precision | 99.64% |
-| Phishing recall | 96.31% |
-| Phishing F1 | 97.95% |
-| Average precision | 0.9981 |
-| ROC-AUC | 0.9978 |
-| False-positive rate | 0.2373% |
-| Brier score | 0.01063 |
-| Log-loss | 0.03964 |
+| Accuracy | 82.00% |
+| Phishing precision | 86.49% |
+| Phishing recall | 75.80% |
+| Phishing F1 | 80.79% |
+| Average precision | 0.9078 |
+| ROC-AUC | 0.9066 |
+| False-positive rate | 11.82% |
+| Brier score | 0.12806 |
+| Log-loss | 0.40705 |
 
-Results refer to version 2 on this historical dataset. Version 1 was retained in MLflow for traceability; its earlier results must not be presented as this release's results.
+These metrics evaluate the calibrated classifier, excluding independent domain-warning rules. Permutation importance uses sampled validation data and describes global model reliance, not an individual URL's explanation. See [saved results](docs/results/version-3.json).
 
-## Limitations and intended use
+## Domain warnings and reported failures
 
-Inspection of the raw dataset found that **all legitimate examples use HTTPS, a `www` hostname, and a root page**. Phishing examples have more varied URL formats. This strong collection bias can make the benchmark much easier than detecting phishing on today's web and can cause false positives for genuine URLs with other formats. High confidence can also be misleading outside this dataset's distribution. Domain-disjoint splitting reduces duplicate-domain leakage but does not remove collection bias.
+Offline comparisons cover selected Google, YouTube, Microsoft, PayPal, and Apple domains, documented by primary sources in `domain_signals.py`. Checks include selected digit/Unicode confusables, one-character edits, brand affixes, unrelated-domain subdomains, and private public-suffix tenants. Generic-word checks are conservative. Official-domain comparisons suppress only spelling warnings; they never lower the model probability or certify a URL.
 
-The root empty-path and `/` representations are normalized consistently. This follows the HTTP(S) URI equivalence described in [RFC 9110 §4.2.3](https://www.rfc-editor.org/rfc/rfc9110.html#section-4.2.3). Other paths retain their case and encoding. `www` and non-`www` hosts are not silently treated as equivalent.
+| Offline behavioral example | Version 3 behavior |
+|---|---|
+| `mail.g0ogle.com` | High caution; Google-like digit substitution |
+| `mail.googletex.com` | High caution; added text in Google-like registered domain |
+| User-reported YouTube `/watch?v=…` | 3.91/100 model score, Low; no domain warning |
 
-This release provides URL-pattern estimates only. It does not inspect HTML, TLS certificates, WHOIS, DNS, redirects, or live reputation, and it does not establish that a website is safe to visit. Indicators are observed characteristics, not causal explanations or rules that override the model. TLD/domain-suffix associations are computed from training rows only, require at least 100 examples and a phishing fraction of at least 70%, and are dataset-specific.
+The two lookalike spellings have no independently established phishing labels here. Their raw model scores remain low and are shown separately. Behavioral cases are not used for candidate selection/calibration and are not an accuracy benchmark. `behavior_review.json` is saved as an MLflow artifact.
 
-Use for academic demonstrations and methodology discussion. A later evaluation should add independently sourced benign URLs with diverse paths/hostnames and recent phishing URLs, then evaluate on a separate source or time period before wider use.
+## Historical comparison and practical limits
+
+Versions 1 and 2 remain in MLflow. Version 2 used [UCI PhiUSIIL](https://archive.ics.uci.edu/dataset/967/phiusiil%2Bphishing%2Burl%2Bwebsite%2Bdataset), with original 0=phishing, 1=legitimate remapped internally. Inspection found all legitimate examples were HTTPS, `www`, and root pages. Its 98.35% accuracy concealed false positives on common benign paths and missed brand lookalikes. [Version 2 results](docs/results/version-2.json) are historical; its different source/test cohort makes direct accuracy comparison inappropriate.
+
+Version 3 addresses that collection bias but still misses phishing and flags legitimate URLs. Historical sigmoid calibration does not establish calibration on today's web. The brand catalogue and confusable handling are incomplete, and spelling warnings can be false positives. HTTPS, no warnings, or a low model estimate never guarantees safety. Malicious uploads, compromised domains, redirects, and page content remain outside verification.
+
+No HTML, TLS certificate, WHOIS, DNS, redirect, or live reputation lookup occurs. URLs are never fetched or persisted. Empty HTTP(S) root paths and `/` are normalized consistently under [RFC 9110 §4.2.3](https://www.rfc-editor.org/rfc/rfc9110.html#section-4.2.3); other paths retain their case and encoding. Intended use is academic demonstration and methodology discussion.
 
 ## Reproduction and integrity
 
-Use the environment in `requirements.lock`, then `phishshield download`, `phishshield train`, and `phishshield verify`. The current release manifest records exact dependencies, dataset checksum, model checksum, seed, partitions, and source run. This release was trained before the first Git commit, so its manifest records no code revision. Later training runs record the current Git revision.
+Install `requirements.lock`, then run `phishshield download`, `phishshield train`, and `phishshield verify`. Default dataset is Hannousse; default seed is 43. Use explicit source/seed/output arguments for historical comparisons.
 
-The app validates checksum, feature version, class mapping, and scikit-learn compatibility before loading the project-owned release. Only trusted serialized model artifacts should be loaded. Submitted URLs are processed locally without visiting them or persisting their history.
+Manifest metadata includes exact dependencies, dataset provenance/checksum, source-file code hashes, current Git revision, partitions, threshold, model checksum, and run ID. Source hashes identify the training code even when the working tree differs from its Git commit. The app validates model checksum, feature version, class mapping, and scikit-learn compatibility. Load only trusted serialized artifacts.
