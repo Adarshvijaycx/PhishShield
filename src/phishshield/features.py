@@ -21,7 +21,7 @@ from sklearn.base import BaseEstimator, TransformerMixin
 import tldextract
 
 
-FEATURE_VERSION = "2.0.0"
+FEATURE_VERSION = "1.1.0"
 MAX_URL_LENGTH = 8192
 SUSPICIOUS_KEYWORDS = ("login", "verify", "secure", "account", "update", "password")
 FEATURE_NAMES = (
@@ -272,56 +272,3 @@ class URLFeatureExtractor(TransformerMixin, BaseEstimator):
 
     def get_feature_names_out(self, input_features: Any = None) -> np.ndarray:
         return np.asarray(FEATURE_NAMES, dtype=object)
-
-
-# The UCI collection has no benign paths, HTTP, or non-www hostnames. These
-# features deliberately exclude all those collection proxies from the model.
-# Full URL features remain available above as independent observations.
-MODEL_SCOPE = "registered_domain"
-MODEL_FEATURE_NAMES = (
-    "registered_domain_length", "domain_label_length", "tld_length",
-    "domain_digit_count", "domain_digit_ratio", "domain_hyphen_count",
-    "domain_dot_count", "domain_entropy", "domain_keyword_count",
-    "domain_vowel_ratio", "domain_max_digit_run", "has_ip", "has_punycode",
-)
-
-
-def extract_domain_features(url: str | ParsedURL) -> dict[str, int | float]:
-    """Describe only the effective registered domain; never the URL path.
-
-    This is a lexical domain model, not a safety verdict for the complete URL.
-    Public-suffix private tenants remain separate effective domains.
-    """
-    parsed = _parsed(url)
-    domain = parsed.registered_domain
-    label = domain.removesuffix("." + parsed.tld) if parsed.tld else domain
-    digits = sum(character.isdigit() for character in domain)
-    return {
-        "registered_domain_length": len(domain),
-        "domain_label_length": len(label),
-        "tld_length": len(parsed.tld),
-        "domain_digit_count": digits,
-        "domain_digit_ratio": digits / len(domain),
-        "domain_hyphen_count": domain.count("-"),
-        "domain_dot_count": domain.count("."),
-        "domain_entropy": _entropy(domain),
-        "domain_keyword_count": sum(domain.count(word) for word in SUSPICIOUS_KEYWORDS),
-        "domain_vowel_ratio": sum(character in "aeiou" for character in label) / len(label),
-        "domain_max_digit_run": max((len(run) for run in re.findall(r"[0-9]+", domain)), default=0),
-        "has_ip": int(parsed.is_ip),
-        "has_punycode": int(any(part.startswith("xn--") for part in domain.split("."))),
-    }
-
-
-class RegisteredDomainFeatureExtractor(URLFeatureExtractor):
-    """Use the same domain-only schema during training and inference."""
-
-    def transform(self, X: Any) -> pd.DataFrame:
-        urls = self._urls(X)
-        return pd.DataFrame(
-            [extract_domain_features(url) for url in urls],
-            index=urls.index, columns=MODEL_FEATURE_NAMES, dtype=float,
-        )
-
-    def get_feature_names_out(self, input_features: Any = None) -> np.ndarray:
-        return np.asarray(MODEL_FEATURE_NAMES, dtype=object)

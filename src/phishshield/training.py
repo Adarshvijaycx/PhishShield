@@ -40,9 +40,7 @@ from phishshield.data import (
     SPLIT_FRACTIONS, file_sha256, prepare_dataset, split_dataset, split_summary,
     training_tld_statistics,
 )
-from phishshield.features import (
-    FEATURE_VERSION, MODEL_FEATURE_NAMES, MODEL_SCOPE, RegisteredDomainFeatureExtractor,
-)
+from phishshield.features import FEATURE_NAMES, FEATURE_VERSION, URLFeatureExtractor
 
 
 MODEL_NAME = "PhishShield"
@@ -145,7 +143,7 @@ def _log_model(model: Pipeline, example: pd.DataFrame, versions: dict[str, str])
         pyfunc_predict_fn="predict_proba",
         code_paths=[str(Path(__file__).resolve().parent)],
         pip_requirements=[f"{name}=={versions[name]}" for name in INFERENCE_DISTRIBUTIONS],
-        metadata={"feature_version": FEATURE_VERSION, "positive_class": 1, "threshold": THRESHOLD, "model_scope": MODEL_SCOPE},
+        metadata={"feature_version": FEATURE_VERSION, "positive_class": 1, "threshold": THRESHOLD, "model_scope": "full_url"},
     )
 
 
@@ -215,7 +213,7 @@ def _save_importance(
         random_state=seed, n_jobs=1,
     )
     table = pd.DataFrame({
-        "feature": list(MODEL_FEATURE_NAMES),
+        "feature": list(FEATURE_NAMES),
         "importance_mean": result.importances_mean,
         "importance_std": result.importances_std,
     }).sort_values("importance_mean", ascending=False).reset_index(drop=True)
@@ -242,7 +240,7 @@ def train_project(
     frame = split_dataset(prepared.frame, seed=seed)
     summaries = split_summary(frame)
     datasets = {name: frame.loc[frame["split"] == name] for name in SPLIT_FRACTIONS}
-    feature_extractor = RegisteredDomainFeatureExtractor().fit(datasets["train"][["url"]])
+    feature_extractor = URLFeatureExtractor().fit(datasets["train"][["url"]])
     matrix = feature_extractor.transform(frame[["url"]])
     matrix.index = frame.index
     features = {name: matrix.loc[partition.index] for name, partition in datasets.items()}
@@ -251,7 +249,7 @@ def train_project(
     _configure_tracking(tracking_uri)
     common_params = {
         "seed": seed, "split_seed": frame.attrs["split_seed"], "feature_version": FEATURE_VERSION,
-        "dataset_checksum": prepared.checksum, "threshold": THRESHOLD, "model_scope": MODEL_SCOPE,
+        "dataset_checksum": prepared.checksum, "threshold": THRESHOLD, "model_scope": "full_url",
         **{f"{name}_rows": len(partition) for name, partition in datasets.items()},
     }
     summary = {**prepared.summary, "dataset_checksum": prepared.checksum,
@@ -340,9 +338,9 @@ def train_project(
                 "model_name": MODEL_NAME, "model_version": int(version), "run_id": run.info.run_id,
                 "algorithm": algorithm, "created_at": created_at, "feature_version": FEATURE_VERSION,
                 "dataset_checksum": prepared.checksum, "dataset_source": prepared.source,
-                "model_scope": MODEL_SCOPE, "model_features": list(MODEL_FEATURE_NAMES),
+                "model_scope": "full_url", "model_features": list(FEATURE_NAMES),
                 "assessment_policy": "independent_domain_warnings_v1",
-                "probability_scope": "Historical UCI registered-domain lexical estimate; no live reputation or website verification",
+                "probability_scope": "Historical full-URL lexical estimate; no live reputation or website verification",
                 "model_sha256": file_sha256(model_path), "threshold": THRESHOLD, "risk_bands": RISK_BANDS,
                 "metrics": test_metrics, "tld_statistics": training_tld_statistics(frame),
                 "dependency_versions": versions, "code_revision": _git_revision(),

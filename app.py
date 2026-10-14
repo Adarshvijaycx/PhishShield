@@ -87,7 +87,7 @@ def _gauge(score: float, band: str) -> go.Figure:
             mode="gauge+number",
             value=score,
             number={"valueformat": ".1f", "font": {"size": 43, "color": "#F2F6FF"}},
-            title={"text": "Estimated phishing risk", "font": {"size": 15, "color": "#A9B9D0"}},
+            title={"text": "Model phishing estimate", "font": {"size": 15, "color": "#A9B9D0"}},
             gauge={
                 "axis": {"range": [0, 100], "tickvals": [0, 30, 70, 100], "tickcolor": "#6B829F"},
                 "bar": {"color": color, "thickness": .26},
@@ -160,24 +160,42 @@ def _show_result(result) -> None:
         with details:
             st.markdown('<div class="ps-result-label">Analysis result</div>', unsafe_allow_html=True)
             st.subheader(result.category)
-            band = result.risk_band
+            band = result.assessment_band
             # The band is fixed by the inference API, never derived from user markup.
             color = RISK_COLORS.get(band, "#28D5B6")
             safe_band = band if band in RISK_COLORS else "Unknown"
-            st.markdown(f'<span class="ps-badge" style="color:{color}">{safe_band} risk</span>', unsafe_allow_html=True)
+            badge = f"{safe_band} caution · domain warning" if result.assessment_basis == "domain_warning" else f"{safe_band} model risk"
+            st.markdown(f'<span class="ps-badge" style="color:{color}">{badge}</span>', unsafe_allow_html=True)
+            if result.domain_signals:
+                st.error("The domain resembles a known brand but is outside its comparison domains. Verify the address independently before opening it.")
             st.caption("EFFECTIVE HOSTNAME")
             st.text(result.hostname)
             st.caption("LAST ANALYZED URL")
             st.code(result.normalized_url, language=None, wrap_lines=True)
         with gauge:
-            st.plotly_chart(_gauge(result.risk_score, result.risk_band), width="stretch", config={"displayModeBar": False}, key="risk_gauge")
-            st.caption("Low <30 · Medium 30–<70 · High ≥70")
-        st.caption("Risk = calibrated P(phishing) × 100. Category uses a 50% threshold; risk bands summarize that same estimate.")
+            if result.domain_signals:
+                st.write("**Domain warning takes priority**")
+                st.caption("A low model estimate does not clear this domain warning. High caution is a review rule, not a measured phishing probability.")
+                with st.expander("View the unmodified model estimate"):
+                    st.plotly_chart(_gauge(result.risk_score, result.risk_band), width="stretch", config={"displayModeBar": False}, key="risk_gauge")
+                    st.caption(f"Model only: {result.model_category} · {result.risk_band} · {result.risk_score:.1f}/100")
+            else:
+                st.plotly_chart(_gauge(result.risk_score, result.risk_band), width="stretch", config={"displayModeBar": False}, key="risk_gauge")
+                st.caption("Low <30 · Medium 30–<70 · High ≥70")
+        st.caption("Model score = calibrated P(phishing) × 100 on historical URL data. The model class uses a 50% threshold. Independent domain warnings require review and leave this probability unchanged.")
+
+    if result.domain_signals:
+        st.subheader("Domain identity warnings")
+        for signal in result.domain_signals:
+            with st.container(border=True):
+                st.write(f"**{signal['title']}**")
+                st.caption(signal["description"])
+        st.caption("The comparison catalogue and supported lookalike patterns are limited. A warning is not proof of phishing; its absence does not verify ownership or safety.")
 
     st.subheader("Suspicious indicators")
     st.caption("Observed URL patterns. These indicators are context, not an explanation of this individual prediction.")
     if not result.indicators:
-        st.success("None of the listed suspicious URL patterns were found.")
+        st.info("No additional structural warning patterns were found.")
         st.caption("A URL with no listed indicators can still be phishing.")
     else:
         columns = st.columns(2, gap="medium")
@@ -265,7 +283,7 @@ def _artifact_image(bundle, filename: str, caption: str) -> None:
 def _insights(bundle, model_error: str | None) -> None:
     st.markdown("### Evidence behind the model")
     st.caption("Real experiment results from the exported MLflow release. Candidate selection and final test evaluation use separate partitions.")
-    st.caption("This dataset has a narrow legitimate-URL profile (HTTPS, www, and root pages). Scores for other URL formats may be unreliable.")
+    st.caption("Historical dataset results describe this evaluation only. The current corpus includes legitimate paths and query strings; live reputation and page content are not checked.")
     if bundle is None:
         _missing_release(model_error or "No valid model release was found.")
         return
@@ -277,6 +295,8 @@ def _insights(bundle, model_error: str | None) -> None:
         value = metrics.get(key)
         column.metric(label, f"{float(value) * 100:.2f}%" if value is not None else "Unavailable")
     st.caption(f"{manifest.get('algorithm', 'Classifier')} · {int(manifest.get('test_rows', 0)):,} held-out URLs · calibrated with a separate calibration partition")
+    st.caption(f"Dataset: {manifest.get('dataset_kind', 'See release manifest')} · source: {manifest.get('dataset_source', 'See release manifest')}")
+    st.caption("Metrics below evaluate the learned classifier. Independent domain-warning rules are tested separately and are not included in these benchmark figures.")
     with st.expander("All held-out metrics & data partitions"):
         st.dataframe(pd.DataFrame({"Metric": list(metrics), "Value": list(metrics.values())}), width="stretch", hide_index=True)
         rows = {partition.title(): manifest.get(f"{partition}_rows", 0) for partition in ("training", "validation", "calibration", "test")}
@@ -328,6 +348,8 @@ def _insights(bundle, model_error: str | None) -> None:
         st.text(f"Dataset SHA-256: {manifest.get('dataset_checksum', 'unknown')}")
         st.text(f"Model SHA-256: {manifest.get('model_sha256', 'unknown')}")
         st.caption("Download the manifest for thresholds, data counts, feature version, dependencies, and release provenance.")
+        if manifest.get("dataset_provenance"):
+            st.json(manifest["dataset_provenance"])
         st.download_button("Download release manifest", data=json.dumps(manifest, indent=2), file_name="phishshield_release_manifest.json", mime="application/json")
         st.caption("URL patterns may change over time. Results on this historical dataset do not guarantee performance on current attacks.")
 

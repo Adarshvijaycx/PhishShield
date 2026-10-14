@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 import hashlib
+import json
 from pathlib import Path
 
 import pandas as pd
@@ -16,6 +17,13 @@ DATASET_SOURCE = (
     "https://archive.ics.uci.edu/dataset/967/"
     "phiusiil%2Bphishing%2Burl%2Bwebsite%2Bdataset"
 )
+HANNOUSSE_SOURCE = "https://data.mendeley.com/datasets/c2gw7fy2j4/3"
+HANNOUSSE_MIRROR_REVISION = "1375d450d4540205ac11781b807249c9509739cd"
+HANNOUSSE_MIRROR_BASE = (
+    "https://huggingface.co/datasets/pirocheto/phishing-url/resolve/"
+    + HANNOUSSE_MIRROR_REVISION + "/data/"
+)
+HANNOUSSE_MIRROR_FILES = ("train.parquet", "test.parquet")
 SPLIT_FRACTIONS = {"train": 0.60, "validation": 0.15, "calibration": 0.10, "test": 0.15}
 
 
@@ -38,29 +46,52 @@ def file_sha256(path: str | Path) -> str:
 def prepare_dataset(
     csv_path: str | Path, *, max_rows: int | None = None, seed: int = 42
 ) -> PreparedDataset:
-    """Read only raw URLs and original UCI labels: 1=legitimate, 0=phishing.
+    """Read raw URL text and source-specific labels without webpage features.
 
-    The returned labels use 1=phishing and 0=legitimate everywhere. Invalid
-    URLs are counted and removed. All occurrences of a conflicting normalized
-    URL are removed before deduplication or optional stratified sampling.
+    Hannousse's ``status`` uses phishing/legitimate strings. Original UCI
+    ``label`` uses 0=phishing and 1=legitimate. Both become internal 1=phishing,
+    0=legitimate. All conflicting normalized URLs are removed before sampling.
     """
     path = Path(csv_path).expanduser().resolve()
     if max_rows is not None and max_rows < 40:
         raise ValueError("max_rows must be at least 40 for four evaluation partitions.")
     raw = pd.read_csv(
         path,
-        usecols=lambda column: str(column).strip().casefold() in {"url", "label"},
+        usecols=lambda column: str(column).strip().casefold() in {"url", "label", "status"},
         low_memory=False,
     )
     raw.columns = [str(column).strip().casefold() for column in raw.columns]
-    if set(raw.columns) != {"url", "label"}:
-        raise ValueError("The CSV must contain URL and label columns with original UCI labels.")
+    columns = set(raw.columns)
+    if columns == {"url", "status"}:
+        dataset_kind, source, label_column = "hannousse", HANNOUSSE_SOURCE, "status"
+        original_mapping = {"legitimate": "legitimate", "phishing": "phishing"}
+    elif columns == {"url", "label"}:
+        dataset_kind, source, label_column = "phiusiil", DATASET_SOURCE, "label"
+        original_mapping = {"0": "phishing", "1": "legitimate"}
+    else:
+        raise ValueError("The CSV must contain URL and either Hannousse status or original UCI label columns, not both.")
     raw_count = len(raw)
-    missing_mask = raw["url"].isna() | raw["label"].isna()
+    missing_mask = raw["url"].isna() | raw[label_column].isna()
     raw = raw.loc[~missing_mask].copy()
-    original_labels = pd.to_numeric(raw["label"], errors="coerce")
-    if not original_labels.isin([0, 1]).all():
-        raise ValueError("Expected original UCI labels: 1=legitimate and 0=phishing.")
+    if dataset_kind == "hannousse":
+        statuses = raw["status"].astype(str).str.strip().str.casefold()
+        if not statuses.isin(["legitimate", "phishing"]).all():
+            raise ValueError("Expected Hannousse status labels: legitimate and phishing.")
+        internal_labels = statuses.map({"legitimate": 0, "phishing": 1})
+    else:
+        original_labels = pd.to_numeric(raw["label"], errors="coerce")
+        if not original_labels.isin([0, 1]).all():
+            raise ValueError("Expected original UCI labels: 1=legitimate and 0=phishing.")
+        internal_labels = 1 - original_labels.astype(int)
+    checksum = file_sha256(path)
+    provenance = {"dataset_kind": dataset_kind, "source": source, "label_column": label_column,
+                  "csv_sha256": checksum}
+    metadata_path = path.with_suffix(".source.json")
+    if metadata_path.is_file():
+        metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
+        if not isinstance(metadata, dict) or metadata.get("dataset_kind") != dataset_kind or metadata.get("csv_sha256") != checksum:
+            raise ValueError("Dataset provenance does not match this CSV; download it again or supply its correct metadata.")
+        provenance.update(metadata)
 
     records = []
     invalid_urls = 0
@@ -73,9 +104,13 @@ def prepare_dataset(
         records.append({
             "row_id": int(row_id),
             "url": parsed.normalized_url,
-            "label": 1 - int(original_labels.loc[row_id]),
+            "label": int(internal_labels.loc[row_id]),
             "domain_group": parsed.registered_domain or parsed.hostname,
             "tld": parsed.tld,
+            "_https": int(parsed.scheme == "https"),
+            "_nonroot_path": int(bool(parsed.path)),
+            "_query": int(bool(parsed.query)),
+            "_www": int(parsed.hostname.startswith("www.")),
         })
     if not records:
         raise ValueError("No usable HTTP(S) URLs remain after validation.")
@@ -95,9 +130,20 @@ def prepare_dataset(
             frame, train_size=max_rows, stratify=frame["label"], random_state=seed
         )
     frame = frame.sort_values("row_id").reset_index(drop=True)
+    format_profile = {
+        ("phishing" if label else "legitimate"): {
+            name.removeprefix("_"): float(group[name].mean())
+            for name in ("_https", "_nonroot_path", "_query", "_www")
+        }
+        for label, group in frame.groupby("label", sort=True)
+    }
+    frame = frame.drop(columns=["_https", "_nonroot_path", "_query", "_www"])
     summary = {
-        "dataset_source": DATASET_SOURCE,
-        "original_label_mapping": {"0": "phishing", "1": "legitimate"},
+        "dataset_source": source,
+        "dataset_kind": dataset_kind,
+        "provenance": provenance,
+        "url_format_profile_by_class": format_profile,
+        "original_label_mapping": original_mapping,
         "internal_label_mapping": {"0": "legitimate", "1": "phishing"},
         "raw_rows": raw_count,
         "missing_url_or_label_rows": int(missing_mask.sum()),
@@ -111,7 +157,7 @@ def prepare_dataset(
         "class_counts": {"legitimate": int((frame["label"] == 0).sum()), "phishing": int((frame["label"] == 1).sum())},
         "sampling_seed": seed,
     }
-    return PreparedDataset(frame=frame, summary=summary, checksum=file_sha256(path))
+    return PreparedDataset(frame=frame, summary=summary, checksum=checksum, source=source)
 
 
 def split_dataset(frame: pd.DataFrame, *, seed: int = 42) -> pd.DataFrame:

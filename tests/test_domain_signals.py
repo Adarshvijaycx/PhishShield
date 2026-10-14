@@ -22,6 +22,9 @@ from phishshield.features import parse_url
     ("https://secure-paypal.test/signin", "PayPal", "brand_affix"),
     ("https://apple-login.test/", "Apple", "brand_affix"),
     ("https://aple.test/account", "Apple", "brand_typo"),
+    ("https://google.test/", "Google", "brand_domain_mismatch"),
+    ("https://youtube.github.io/", "YouTube", "brand_domain_mismatch"),
+    ("https://apple.test/login", "Apple", "brand_domain_mismatch"),
 ])
 def test_generalized_lookalike_patterns(url, brand, code):
     signals = get_domain_signals(url)
@@ -57,6 +60,9 @@ def test_private_suffix_tenant_label_is_compared_as_registered_domain():
     "https://www.youtube.com/watch?v=HsZxZ8hoYdU",
     "https://mail.google.com/", "https://accounts.google.co.in/login",
     "https://accounts.google.co.uk/login", "https://youtu.be/example",
+    "https://www.google.fr/search?q=python", "https://www.google.com.au/",
+    "https://www.google.co.jp/",
+    "https://www.google.org/", "https://www.microsoft365.com/", "https://paypal.me/example",
     "https://support.microsoft.com/", "https://login.microsoftonline.com/common/oauth2/authorize",
     "https://www.paypal.com/signin", "https://support.apple.com/", "https://www.icloud.com/",
 ])

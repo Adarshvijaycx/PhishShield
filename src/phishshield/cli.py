@@ -17,11 +17,12 @@ os.environ.setdefault("MLFLOW_DISABLE_AGENT_HINT", "1")
 ROOT = Path(__file__).resolve().parents[2]
 DATASET_URL = "https://archive.ics.uci.edu/static/public/967/phiusiil%2Bphishing%2Burl%2Bdataset.zip"
 DATASET_FILENAME = "PhiUSIIL_Phishing_URL_Dataset.csv"
-DEFAULT_CSV = ROOT / "data" / "raw" / DATASET_FILENAME
+HANNOUSSE_FILENAME = "Hannousse_Phishing_URL_Dataset.csv"
+DEFAULT_CSV = ROOT / "data" / "raw" / HANNOUSSE_FILENAME
 DEFAULT_RELEASE = ROOT / "artifacts" / "release"
 
 
-def download_dataset(destination: Path) -> Path:
+def _download_phiusiil(destination: Path) -> Path:
     import requests
 
     destination = destination.expanduser().resolve()
@@ -52,11 +53,83 @@ def download_dataset(destination: Path) -> Path:
     return destination
 
 
+def _download_hannousse(destination: Path) -> Path:
+    """Recombine the pinned mirror splits, keeping only raw URLs and labels.
+
+    The mirror's old random partitions are discarded. Training makes fresh
+    domain-disjoint partitions after normalization and deduplication.
+    """
+    import pandas as pd
+    import requests
+    from phishshield.data import (
+        HANNOUSSE_SOURCE, HANNOUSSE_MIRROR_REVISION, HANNOUSSE_MIRROR_BASE,
+        HANNOUSSE_MIRROR_FILES, file_sha256,
+    )
+
+    destination = destination.expanduser().resolve()
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    if destination.is_file():
+        print(f"Dataset already exists: {destination}")
+        return destination
+    temporary_csv = destination.with_suffix(".csv.part")
+    metadata = destination.with_suffix(".source.json")
+    temporary_metadata = metadata.with_suffix(".json.part")
+    downloads = []
+    try:
+        print("Downloading the licensed Hannousse URL dataset from a pinned mirror; submitted websites are never visited.", flush=True)
+        frames, files = [], []
+        for filename in HANNOUSSE_MIRROR_FILES:
+            temporary = destination.parent / ("hannousse-" + filename + ".part")
+            downloads.append(temporary)
+            url = HANNOUSSE_MIRROR_BASE + filename
+            with requests.get(url, stream=True, timeout=(15, 120)) as response:
+                response.raise_for_status()
+                with temporary.open("wb") as stream:
+                    for chunk in response.iter_content(chunk_size=1024 * 1024):
+                        stream.write(chunk)
+            projected = pd.read_parquet(temporary, columns=["url", "status"])
+            statuses = projected["status"].astype(str).str.strip().str.casefold()
+            if projected["url"].isna().any() or not statuses.isin(["phishing", "legitimate"]).all():
+                raise ValueError("The Hannousse mirror contains unexpected URL/status labels.")
+            frames.append(projected)
+            files.append({"url": url, "sha256": file_sha256(temporary), "rows": len(projected)})
+        data = pd.concat(frames, ignore_index=True).rename(columns={"url": "URL"})
+        data.to_csv(temporary_csv, index=False)
+        provenance = {
+            "dataset_kind": "hannousse", "source": HANNOUSSE_SOURCE,
+            "license": "CC BY 4.0", "authors": ["Abdelhakim Hannousse", "Salima Yahiouche"],
+            "mirror": "https://huggingface.co/datasets/pirocheto/phishing-url",
+            "mirror_revision": HANNOUSSE_MIRROR_REVISION, "source_files": files,
+            "changes": "Recombined mirror train/test files; retained only raw URL and status; original partitions discarded.",
+            "csv_sha256": file_sha256(temporary_csv), "raw_rows": len(data),
+        }
+        temporary_metadata.write_text(json.dumps(provenance, indent=2) + "\n", encoding="utf-8")
+        temporary_csv.replace(destination)
+        temporary_metadata.replace(metadata)
+    finally:
+        for temporary in downloads:
+            temporary.unlink(missing_ok=True)
+        temporary_csv.unlink(missing_ok=True)
+        temporary_metadata.unlink(missing_ok=True)
+    print(f"Dataset saved: {destination}")
+    return destination
+
+
+def download_dataset(destination: Path, dataset: str = "hannousse") -> Path:
+    """Download the chosen source without contacting any URLs in the dataset."""
+    if dataset == "hannousse":
+        return _download_hannousse(destination)
+    if dataset == "phiusiil":
+        return _download_phiusiil(destination)
+    raise ValueError("Choose a documented dataset: hannousse or phiusiil.")
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="PhishShield local training, analysis, and MLflow demonstration")
     commands = parser.add_subparsers(dest="command", required=True)
-    download = commands.add_parser("download", help="Download the labeled UCI PhiUSIIL CSV")
-    download.add_argument("--output", type=Path, default=DEFAULT_CSV)
+    download = commands.add_parser("download", help="Download a documented labeled raw-URL dataset")
+    download.add_argument("--dataset", choices=["hannousse", "phiusiil"], default="hannousse")
+    download.add_argument("--output", type=Path, default=None)
     train = commands.add_parser("train", help="Compare three models, log MLflow runs, and export the champion")
     train.add_argument("--data", type=Path, default=DEFAULT_CSV)
     train.add_argument("--output", type=Path, default=DEFAULT_RELEASE)
@@ -77,7 +150,8 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
     try:
         if args.command == "download":
-            download_dataset(args.output)
+            output = args.output or (ROOT / "data" / "raw" / (HANNOUSSE_FILENAME if args.dataset == "hannousse" else DATASET_FILENAME))
+            download_dataset(output, dataset=args.dataset)
         elif args.command == "train":
             from phishshield.training import train_project
             result = train_project(args.data, args.output, tracking_uri=args.tracking_uri, max_rows=args.max_rows, seed=args.seed, importance_samples=args.importance_samples)

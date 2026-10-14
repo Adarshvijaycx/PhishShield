@@ -101,7 +101,7 @@ def test_features_match_observable_components_and_are_finite():
     url = "http://a.b.c.secure-account.example:8080/login/verify?x=123&token=%40"
     features = extract_features(url)
     assert tuple(features) == FEATURE_NAMES
-    assert FEATURE_VERSION == "2.0.0"
+    assert FEATURE_VERSION == "1.1.0"
     assert len(features) == 30
     assert features["subdomain_count"] == 3
     assert features["path_depth"] == 2

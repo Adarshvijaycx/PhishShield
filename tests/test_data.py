@@ -1,3 +1,5 @@
+import json
+
 import pandas as pd
 import pytest
 
@@ -63,3 +65,47 @@ def test_insufficient_class_domains_fail_clearly():
     frame.loc[frame["label"] == 1, "domain_group"] = "single.example"
     with pytest.raises(ValueError, match="four distinct domain groups"):
         split_dataset(frame)
+
+
+def test_hannousse_labels_source_and_format_profile_are_explicit(tmp_path):
+    from phishshield.data import HANNOUSSE_SOURCE
+    path = tmp_path / "urls.csv"
+    pd.DataFrame({
+        "URL": ["http://docs.example.org/article?a=1", "https://verify.example/login", "https://mail.example.com"],
+        "status": ["legitimate", "phishing", " LEGITIMATE "],
+        "page_rank": [999, 999, 999],
+    }).to_csv(path, index=False)
+    result = prepare_dataset(path)
+    assert result.source == HANNOUSSE_SOURCE
+    assert result.summary["dataset_kind"] == "hannousse"
+    assert result.frame["label"].tolist() == [0, 1, 0]
+    assert result.summary["original_label_mapping"] == {"legitimate": "legitimate", "phishing": "phishing"}
+    assert result.summary["url_format_profile_by_class"]["legitimate"]["nonroot_path"] == .5
+    assert "page_rank" not in result.frame.columns
+
+
+@pytest.mark.parametrize("statuses", [[0, 1], ["legitimate", "safe"]])
+def test_hannousse_rejects_ambiguous_status_labels(tmp_path, statuses):
+    path = tmp_path / "urls.csv"
+    pd.DataFrame({"URL": ["https://a.example/", "https://b.example/"], "status": statuses}).to_csv(path, index=False)
+    with pytest.raises(ValueError, match="Hannousse status labels"):
+        prepare_dataset(path)
+
+
+def test_dataset_rejects_two_label_columns(tmp_path):
+    path = tmp_path / "urls.csv"
+    pd.DataFrame({"URL": ["https://a.example/"], "label": [0], "status": ["phishing"]}).to_csv(path, index=False)
+    with pytest.raises(ValueError, match="not both"):
+        prepare_dataset(path)
+
+
+def test_dataset_provenance_requires_csv_checksum_and_source_kind(tmp_path):
+    from phishshield.data import file_sha256
+    path = tmp_path / "urls.csv"
+    pd.DataFrame({"URL": ["https://a.example/", "https://b.example/"], "status": ["legitimate", "phishing"]}).to_csv(path, index=False)
+    metadata = path.with_suffix(".source.json")
+    metadata.write_text(json.dumps({"dataset_kind": "hannousse", "csv_sha256": file_sha256(path), "mirror_revision": "fixture"}))
+    assert prepare_dataset(path).summary["provenance"]["mirror_revision"] == "fixture"
+    metadata.write_text(json.dumps({"dataset_kind": "hannousse", "csv_sha256": "stale"}))
+    with pytest.raises(ValueError, match="provenance does not match"):
+        prepare_dataset(path)

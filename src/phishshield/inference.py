@@ -18,6 +18,9 @@ from phishshield.features import (
 )
 
 
+from phishshield.domain_signals import get_domain_signals
+
+
 class ModelLoadError(RuntimeError):
     """The locally exported model is absent, corrupt, or incompatible."""
 
@@ -42,6 +45,11 @@ class PredictionResult:
     model_version: str
     algorithm: str
     features: dict[str, float]
+    model_category: str
+    assessment_band: str
+    assessment_basis: str
+    domain_signals: list[dict[str, Any]]
+    model_scope: str
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
@@ -93,18 +101,37 @@ def analyze_url(url: str, bundle: ModelBundle) -> PredictionResult:
         raise ModelLoadError("The model returned an invalid phishing probability.")
     score = probability * 100
     threshold = float(bundle.manifest.get("threshold", 0.5))
+    model_category = "Potential phishing" if probability >= threshold else "Likely legitimate"
+    band = "Low" if score < 30 else "Medium" if score < 70 else "High"
+    domain_signals = [signal.to_dict() for signal in get_domain_signals(parsed)]
+    category = model_category
+    basis = "model"
+    assessment_band = band
+    if domain_signals:
+        # Independent advisory policy: a spelling warning requires review even
+        # when the learned estimate is low. Never replace or inflate predict_proba.
+        category = "Suspicious domain — review required"
+        assessment_band = "High"
+        basis = "domain_warning"
+    elif band == "Medium" and bundle.manifest.get("assessment_policy"):
+        category = "Model uncertain — review recommended"
     return PredictionResult(
         normalized_url=parsed.normalized_url,
         hostname=parsed.hostname,
         registered_domain=parsed.registered_domain,
-        category="Potential phishing" if probability >= threshold else "Likely legitimate",
+        category=category,
         phishing_probability=probability,
         risk_score=score,
-        risk_band="Low" if score < 30 else "Medium" if score < 70 else "High",
+        risk_band=band,
         indicators=get_indicators(parsed, bundle.manifest.get("tld_statistics", {})),
         model_version=str(bundle.manifest.get("model_version", "unregistered")),
         algorithm=str(bundle.manifest.get("algorithm", "Unknown")),
         features=extract_features(parsed),
+        model_category=model_category,
+        assessment_band=assessment_band,
+        assessment_basis=basis,
+        domain_signals=domain_signals,
+        model_scope=str(bundle.manifest.get("model_scope", "full_url")),
     )
 
 
