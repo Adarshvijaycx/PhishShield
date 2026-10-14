@@ -1,6 +1,29 @@
-# Local MLflow review guide
+# PhishShield: MLflow academic review
 
-Start the services in separate terminals from the project folder:
+MLflow is running at <http://127.0.0.1:5001>. The analyzer is at <http://127.0.0.1:8501>. The verified release is **PhishShield version 3**, Random Forest with separate sigmoid calibration.
+
+The completed review run is [`ca8c64644e534a72af8cad406b0f91f7`](http://127.0.0.1:5001/#/experiments/1/runs/ca8c64644e534a72af8cad406b0f91f7). Its `academic_review` artifacts include a portable HTML review, JSON verification results, model comparison, charts, promotion history, and ZIP evidence pack. Local copies are in `reports/mlflow_review/`.
+
+## What is completed
+
+| Review item | Recorded evidence |
+|---|---|
+| Model comparison | Logistic Regression, Random Forest, Histogram Gradient Boosting; same data/splits |
+| Candidate selection | Random Forest validation AP **0.973470**, selected before calibration/test |
+| Final evaluation | **82.00%** accuracy, **86.49%** precision, **75.80%** recall, **80.79%** F1; 1,944 test URLs |
+| Explainability | Global validation permutation-importance PNG/CSV; excluded from fitting/selection |
+| Evaluation charts | Confusion matrix, calibration, ROC, precision–recall |
+| Dataset lineage | Native Dataset Inputs for train/validation; release also records calibration/test |
+| Model registry | Immutable `models:/PhishShield/3`, source run and model checksum |
+| Promotion | Verified `staging` alias → `production` alias; version 3 also remains `champion` |
+| Application parity | 20 saved examples; maximum probability difference **3.33 × 10⁻¹⁶** |
+| Evidence integrity | 15 required release artifacts, run metadata, candidate metrics, checksums and source links |
+
+These classifier metrics exclude independent domain-warning rules. `validation_status=passed` and `academic_review_status=passed` mean the recorded integrity/lineage checks succeeded; they do not certify real-world security performance.
+
+## Repeatable commands
+
+From the project folder, start either service if it is stopped:
 
 ```sh
 .venv/bin/phishshield mlflow
@@ -10,27 +33,55 @@ Start the services in separate terminals from the project folder:
 .venv/bin/phishshield serve
 ```
 
-Open MLflow at <http://127.0.0.1:5001> and the analyzer at <http://127.0.0.1:8501>. Training can log to the same SQLite store with the server stopped; it does not require an external account. Local commands disable MLflow telemetry and Streamlit usage statistics.
+Verify the existing release, record dataset lineage, and create a fresh academic review:
 
-## Demonstration sequence
+```sh
+.venv/bin/phishshield mlflow-review --tracking-uri http://127.0.0.1:5001
+```
 
-1. Select the **PhishShield** experiment. Each full training cycle creates a baseline, three candidate runs, and a final calibrated-release run. Earlier runs are retained.
-2. Filter with `tags.phase = 'candidate'`. Select the latest Logistic Regression, Random Forest, and Histogram Gradient Boosting runs; compare `validation_average_precision`, `validation_recall`, `validation_f1`, and fit time. Candidate evaluation uses validation data, not final test data.
-3. Open the latest run with `tags.phase = 'release'`. Show `test_accuracy`, phishing precision/recall/F1, ROC-AUC, false-positive rate, Brier score, and log-loss. These are the actual frozen calibrated model's results. The current champion is version 3 with feature version 1.1.0 and the Hannousse corpus. Use its metrics; earlier UCI versions have a different evaluation cohort.
-4. Browse **Artifacts → release**. Show `comparison.csv`, dataset/split summary, confusion matrix, calibration plot, PR/ROC curves, and `feature_importance.png`. Show `behavior_review.json` separately: it records model scores and independent spelling warnings, not labeled accuracy. The feature chart measures global validation permutation importance; it does not explain a single submitted URL.
-5. Open **Models → PhishShield**. Show the selected version's `candidate` and `champion` aliases, `validation_status=passed`, source run, feature version, and model checksum. Aliases are the modern registry workflow; they do not mean this student model has been validated for security operations.
-6. Open the analyzer. Select **Simple HTTPS**, then **Analyze URL**. Repeat with **Account keywords** or **Misleading address**. The examples use reserved domains/documentation IPs and are not fetched. Their predicted categories are model outputs, not assigned labels.
-7. Open **Model Insights**. Match the release version and run ID to MLflow, then show candidate validation results, held-out test results, and the importance chart. Explain why version 3 uses a varied corpus: UCI versions falsely flagged ordinary paths because their benign training URLs were root pages. Show the new URL-format profile and provenance. Explain that high-caution spelling warnings are separate from the model estimate and excluded from classifier metrics.
-8. Show a malformed input's validation error. Run `.venv/bin/phishshield verify` to demonstrate checksum and regression verification.
+To demonstrate staging-to-production promotion after those checks:
 
-## Saved evidence
+```sh
+.venv/bin/phishshield mlflow-review --tracking-uri http://127.0.0.1:5001 --promote
+```
 
-- `artifacts/release/model.joblib`: the fitted shared-features/calibrated-classifier pipeline.
-- `manifest.json`: model version, run IDs, feature version, dependencies, checksums, threshold, risk bands, and train/validation/calibration/test counts.
-- `dataset_summary.json` and `split_assignments.csv`: cleaning and domain separation evidence.
-- `comparison.csv` and `baseline_metrics.json`: validation comparison and prior baseline.
-- `behavior_review.json`: offline behavior checks for reported failures; no invented phishing ground truth.
-- `metrics.json`, evaluation PNGs, and importance CSV/PNG: final test results and global explanation.
-- `known_urls.json`: documented held-out URL prediction snapshots for stability checks; these are distinct from accuracy evaluation.
+The command loads the immutable registered version and compares its raw `predict_proba` values with the exported release and frozen snapshots. It checks the run IDs, candidate ranking, baseline, split assignments, dataset checksum, and required artifacts. Failed model/data checks stop the workflow before alias promotion. Repeated lineage recording skips existing matching Inputs; historical run durations/statuses are preserved.
 
-Back up `mlflow.db`, `mlartifacts`, and `artifacts/release` together. These local folders are ignored by Git. Retraining produces a new model version and updates the explicit release bundle; feature changes require retraining. Do not load an older release with incompatible feature code.
+The default output is `reports/mlflow_review`. Use `--output`, `--release`, and `--data` for other local review folders/bundles. Leaving out `--tracking-uri` uses the project SQLite store directly, so checks and logging also work with the UI server stopped.
+
+For a read-only programmatic inspection, use `phishshield.mlflow_review.inspect_mlflow_release(release_dir, tracking_uri)`. It logs no runs or aliases. `phishshield verify` remains the local checksum/snapshot check.
+
+## Six-minute demonstration
+
+| Time | What to show and explain |
+|---|---|
+| 0–1 min | Open PhishShield experiment. Filter `tags.review_cohort = 'version-3-e3c4c481'`. Open a candidate's Dataset Inputs: raw URL/label only, source CSV, digest, training/validation contexts. |
+| 1–2 min | Add `tags.phase = 'candidate'`; compare the three runs' validation AP, recall/F1, parameters, and fit time. Explain selection by validation AP rather than final test accuracy. |
+| 2–3 min | Open source release run `e3c4c481ca7346aba76ab9a6e8da87f4`. Show separate calibration, test metrics, and 1,944 domain-disjoint test URLs. Explain historical data limitations. |
+| 3–4 min | Open **Artifacts → release**: confusion matrix, calibration/ROC/PR plots, global permutation importance, data summary, and behavior review. Behavioral cases are separate from labeled accuracy. |
+| 4–5 min | Open **Models → PhishShield → version 3**. Show `staging`, `production`, `champion`, source run, checksum, and review tags. Open the academic review's `promotion.json` and parity evidence. |
+| 5–6 min | Open analyzer **Model Insights** and match model version/run ID. Try reserved example buttons and malformed input. Show the ZIP/offline HTML evidence and successful verification. |
+
+Future training cycles have a UUID `training_cycle_id` in run tags/parameters and exact candidate/baseline IDs in their manifests. Filter those cycles by `tags.training_cycle_id` instead of the review cohort. Dataset checksum alone cannot distinguish repeated training cycles.
+
+## Registry terminology
+
+The project uses modern MLflow aliases/tags. **`staging` and `production` are aliases**, preserving the academic lifecycle vocabulary. They do not change MLflow's former stage field or deploy the application. MLflow deprecated fixed stages in version 2.9 and recommends aliases/tags. [Official registry workflow and stage migration](https://mlflow.org/docs/latest/ml/model-registry/workflow/)
+
+Before promotion, the review verifies model version, raw probability parity, and data lineage. If replacing an existing production version, its pointer is preserved as `previous_production`. The prior version 2 model/runs remain available for traceability; their UCI evaluation cohort differs from version 3's corpus.
+
+## Dataset lineage provenance
+
+Version 3 was trained before native Dataset Inputs were added. This completed review reconstructs the exact saved assignments from the checksum-matched CSV, verifies every row/group/label/split/URL hash, and attaches Inputs through the MLflow client. Existing runs are tagged `dataset_lineage_recorded_post_training=true` with a timestamp; their original training durations and metrics remain intact. Future training records Inputs during fitting. [Official dataset logging API](https://mlflow.org/docs/latest/api_reference/python_api/mlflow.html#mlflow.log_input)
+
+## Saved evidence and backup
+
+- `reports/mlflow_review/index.html`: portable offline review with embedded charts.
+- `reports/mlflow_review/PhishShield-MLflow-Evidence.zip`: review, comparison, promotion history, and charts.
+- `reports/mlflow_review/review.json`: exact run IDs, verified artifacts, native/export parity, and dataset contexts.
+- `docs/results/mlflow-review-version-3.json`: saved repository summary of the completed review.
+- `artifacts/release/`: complete fitted pipeline, manifest, charts, partitions, and snapshots.
+
+Back up **`mlflow.db`, `mlartifacts/`, and `artifacts/release/` together**. Stop MLflow/training before making an ordinary file copy of the database; use SQLite's backup API for a consistent database snapshot while it is running. The evidence ZIP is a review export and does not replace this full backup. Generated data, model files, reports, and MLflow state remain ignored by Git.
+
+Training logs to the local SQLite store even with the UI stopped. Local CLI commands disable MLflow telemetry and Streamlit usage statistics. Submitted URLs are processed offline without opening websites or persisting input history.

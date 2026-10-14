@@ -147,6 +147,12 @@ def main(argv: list[str] | None = None) -> int:
     serve.add_argument("--release", type=Path, default=DEFAULT_RELEASE)
     tracking = commands.add_parser("mlflow", help="Start the local MLflow UI and registry")
     tracking.add_argument("--port", type=int, default=5001)
+    review = commands.add_parser("mlflow-review", help="Verify the registry, record dataset lineage, and create academic evidence")
+    review.add_argument("--release", type=Path, default=DEFAULT_RELEASE)
+    review.add_argument("--tracking-uri", default=None)
+    review.add_argument("--output", type=Path, default=ROOT / "reports" / "mlflow_review")
+    review.add_argument("--data", type=Path, default=None)
+    review.add_argument("--promote", action="store_true", help="Set staging then production aliases after verification")
     args = parser.parse_args(argv)
     try:
         if args.command == "download":
@@ -160,6 +166,10 @@ def main(argv: list[str] | None = None) -> int:
             from phishshield.inference import analyze_url, load_release, verify_release
             result = analyze_url(args.url, load_release(args.release)).to_dict() if args.command == "analyze" else verify_release(args.release)
             print(json.dumps(result, indent=2))
+        elif args.command == "mlflow-review":
+            from phishshield.academic_review import run_academic_review
+            result = run_academic_review(args.release, tracking_uri=args.tracking_uri, output_dir=args.output, dataset_path=args.data, promote=args.promote)
+            print(json.dumps({key: result[key] for key in ("status", "model_version", "run_id", "review_run_id", "examples_checked", "probability_parity", "promotion", "output_dir", "evidence_zip")}, indent=2))
         elif args.command == "serve":
             environment = os.environ.copy()
             environment["PHISHSHIELD_RELEASE_DIR"] = str(args.release.resolve())

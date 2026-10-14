@@ -177,9 +177,9 @@ Register the complete calibrated inference pipeline as **`PhishShield`**, includ
 
 Use the workflow:
 
-`candidate → validation checks → champion`
+`candidate → validation checks → champion`, with a recorded `staging` alias → `production` alias demonstration for academic review
 
-Set validation-status tags and preserve the previous champion for rollback. These aliases implement the selected release workflow; MLflow’s former Staging/Production stages are deprecated. [Registry documentation](https://mlflow.org/docs/latest/ml/model-registry/workflow/)
+Set validation-status tags, record native Dataset Inputs and a shared training-cycle ID, and preserve previous versions for rollback. Use `phishshield mlflow-review --promote` to verify the exported/native model, reconstruct exact source splits, record promotion events, and create the academic evidence pack. Review checks establish lineage and prediction parity; they do not certify security accuracy. These aliases implement the selected release workflow; MLflow’s former Staging/Production stages are deprecated. [Registry documentation](https://mlflow.org/docs/latest/ml/model-registry/workflow/)
 
 The local registry demonstration loads `models:/PhishShield@champion`. Resolve that alias to an immutable model version, then export a versioned release bundle with the complete fitted preprocessing/classifier/calibration pipeline, metrics, charts, regression fixtures, and manifest. The manifest records the registered model/version, source MLflow run ID, code revision, dataset checksum, feature version, thresholds/bands, dependency versions, and model SHA-256. Verify export/reload parity. The Hugging Face app loads this bundle locally; it must not depend on the laptop's MLflow server. Display the loaded version and report loading failures clearly.
 

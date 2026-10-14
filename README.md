@@ -10,7 +10,8 @@ PhishShield analyzes URL text, estimates phishing risk, and shows suspicious pat
 - Offline brand-lookalike warnings for digit substitutions, typos, selected Unicode confusables, added brand text, and misleading subdomains.
 - Indicators for IP hosts, `@`, many subdomains, long URLs, keywords, hostname hyphens, HTTP, punycode, and training-derived domain-suffix associations.
 - Logistic Regression, Random Forest, and Histogram Gradient Boosting comparison.
-- MLflow runs, evaluation artifacts, model registry, and `candidate`/`champion` aliases.
+- MLflow runs, native Dataset Inputs, evaluation artifacts, model registry, and `candidate`/`champion` plus academic `staging`/`production` aliases.
+- Repeatable registry/export verification and an offline MLflow review evidence pack.
 - Global permutation-importance chart, confusion matrix, and calibration/ROC/PR curves.
 - Unit, inference, data-split, Streamlit, and MLflow integration tests; GitHub Actions configuration.
 
@@ -68,6 +69,14 @@ Analyzer: <http://127.0.0.1:8501>
 
 MLflow: <http://127.0.0.1:5001>. Port 5001 avoids macOS AirPlay's usual port 5000. Stop either service with Ctrl+C in its terminal.
 
+Create a verified MLflow review and demonstrate alias promotion:
+
+```sh
+.venv/bin/phishshield mlflow-review --tracking-uri http://127.0.0.1:5001 --promote
+```
+
+The command records dataset lineage, checks native registry/export parity, and saves `reports/mlflow_review/index.html` plus `PhishShield-MLflow-Evidence.zip`. It records an academic review run and staging/production alias events. [Six-minute demonstration guide](docs/MLFLOW_DEMO.md).
+
 The app reads `artifacts/release`; tracking uses the project-local `mlflow.db` and `mlartifacts`. These persist between launches. Retraining adds new runs and a model version. Use the reserved example buttons to demonstrate patterns without visiting submitted links.
 
 ```sh
@@ -107,7 +116,7 @@ Training registers a new version and updates local aliases. Keep separate output
 .venv/bin/python -m pip check
 ```
 
-The suite uses small local fixtures and a temporary MLflow registry. It does not download the full dataset, visit example websites, or need a running server. The GitHub Actions [Tests workflow](.github/workflows/tests.yml) runs on pushes to `main`, pull requests, and manual dispatch, and saves JUnit test reports. Hosted CI results become available after publication.
+The suite uses small local fixtures and a temporary MLflow registry. It does not download the full dataset, visit example websites, or need a running server. The GitHub Actions [Tests workflow](.github/workflows/tests.yml) runs on pushes to `main`, pull requests, and manual dispatch, and saves JUnit test reports. Check hosted CI results in the repository's Actions tab.
 
 ## Project layout
 

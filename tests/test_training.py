@@ -1,4 +1,5 @@
 import json
+from uuid import UUID
 
 import joblib
 from mlflow import MlflowClient
@@ -71,3 +72,38 @@ def test_tiny_training_creates_a_reloadable_registered_release(tmp_path, monkeyp
     assignments = pd.read_csv(output / "split_assignments.csv")
     assert assignments.groupby("domain_group")["split"].nunique().eq(1).all()
     assert client.get_run(manifest["run_id"]).data.metrics["test_average_precision"] == manifest["metrics"]["average_precision"]
+
+    # A training cycle identifies comparable runs even when the same corpus is retrained.
+    assert UUID(manifest["training_cycle_id"]).version == 4
+    assert set(manifest["candidate_run_ids"]) == set(_small_candidates(42))
+    assert manifest["candidate_run_ids"][manifest["algorithm"]] == manifest["selection_run_id"]
+    phase_runs = {manifest["baseline_run_id"]: "baseline", manifest["run_id"]: "release"}
+    phase_runs.update({run_id: "candidate" for run_id in manifest["candidate_run_ids"].values()})
+    assert len(phase_runs) == 5
+    row_counts = {"training": manifest["training_rows"], "validation": manifest["validation_rows"],
+                  "calibration": manifest["calibration_rows"], "test": manifest["test_rows"]}
+    context_digests = {}
+    for run_id, phase in phase_runs.items():
+        tracked = client.get_run(run_id)
+        assert tracked.info.status == "FINISHED"
+        assert tracked.data.tags["phase"] == phase
+        assert tracked.data.tags["training_cycle_id"] == manifest["training_cycle_id"]
+        assert tracked.data.params["training_cycle_id"] == manifest["training_cycle_id"]
+        inputs = tracked.inputs.dataset_inputs
+        expected_contexts = set(row_counts) if phase == "release" else {"training", "validation"}
+        by_context = {dict((tag.key, tag.value) for tag in item.tags)["mlflow.data.context"]: item.dataset
+                      for item in inputs}
+        assert set(by_context) == expected_contexts
+        assert len(inputs) == len(expected_contexts)
+        for context, dataset in by_context.items():
+            partition = "train" if context == "training" else context
+            assert dataset.name == f"hannousse-{partition}"
+            assert json.loads(dataset.source)["uri"] == path.resolve().as_uri()
+            assert dataset.source_type == "local"
+            assert json.loads(dataset.profile)["num_rows"] == row_counts[context]
+            assert [column["name"] for column in json.loads(dataset.schema)["mlflow_colspec"]] == ["url", "label"]
+            assert dataset.digest
+            if context in context_digests:
+                assert dataset.digest == context_digests[context]
+            context_digests[context] = dataset.digest
+    assert len(set(context_digests.values())) == 4

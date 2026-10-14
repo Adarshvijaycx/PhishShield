@@ -1,0 +1,323 @@
+{
+  "status": "passed",
+  "model_name": "PhishShield",
+  "model_version": 3,
+  "run_id": "e3c4c481ca7346aba76ab9a6e8da87f4",
+  "model_sha256": "8c1407b76ab0f0ee61b64b2f76d0ccce44e9341ccaac0de3fdc9019945786c5c",
+  "tracking_uri": "http://127.0.0.1:5001",
+  "champion_alias": {
+    "name": "champion",
+    "version": 3
+  },
+  "selection_run_id": "3b241a79bf8c49c39d98572a582f9316",
+  "selection_metric": "validation_average_precision",
+  "candidates": [
+    {
+      "algorithm": "Random Forest",
+      "run_id": "3b241a79bf8c49c39d98572a582f9316",
+      "validation_metrics": {
+        "accuracy": 0.895574341123819,
+        "precision": 0.9339704604691572,
+        "recall": 0.8891645988420182,
+        "f1": 0.9110169491525424,
+        "average_precision": 0.9734703721394872,
+        "roc_auc": 0.9599120478373956,
+        "false_positive_rate": 0.0947630922693266,
+        "brier_score": 0.0794545627668931,
+        "log_loss": 0.269425074590517
+      },
+      "fit_seconds": 0.3620828749990323
+    },
+    {
+      "algorithm": "Histogram Gradient Boosting",
+      "run_id": "9d5021ecb8684bf7acb4a2c6d224427e",
+      "validation_metrics": {
+        "accuracy": 0.8891098955743412,
+        "precision": 0.9339788732394366,
+        "recall": 0.8775847808105872,
+        "f1": 0.904904051172708,
+        "average_precision": 0.9717053400431368,
+        "roc_auc": 0.9517804949990616,
+        "false_positive_rate": 0.0935162094763092,
+        "brier_score": 0.0826455482828191,
+        "log_loss": 0.2900869870080133
+      },
+      "fit_seconds": 0.3394372079928871
+    },
+    {
+      "algorithm": "Logistic Regression",
+      "run_id": "525a592cb8e64717889ff71bf3ce5961",
+      "validation_metrics": {
+        "accuracy": 0.8533068125310791,
+        "precision": 0.9109712230215828,
+        "recall": 0.8378825475599669,
+        "f1": 0.8728996122361051,
+        "average_precision": 0.9583027419898802,
+        "roc_auc": 0.9307789253087296,
+        "false_positive_rate": 0.1234413965087281,
+        "brier_score": 0.1040561256719306,
+        "log_loss": 0.3288448223280087
+      },
+      "fit_seconds": 0.0088732090080156
+    }
+  ],
+  "baseline": {
+    "algorithm": "Class-prior baseline",
+    "run_id": "8d228d4a07c743c1a7c76e39e9d3b0b5",
+    "validation_metrics": {
+      "accuracy": 0.39880656389855795,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "average_precision": 0.601193436101442,
+      "roc_auc": 0.5,
+      "false_positive_rate": 0.0,
+      "brier_score": 0.25872979206912317,
+      "log_loss": 0.710640329574229
+    }
+  },
+  "test_metrics": {
+    "accuracy": 0.8199588477366255,
+    "precision": 0.8648648648648649,
+    "recall": 0.7579814624098867,
+    "f1": 0.8079034028540066,
+    "average_precision": 0.9078136458887611,
+    "roc_auc": 0.9066087133235886,
+    "false_positive_rate": 0.11819116135662898,
+    "brier_score": 0.12805593062946538,
+    "log_loss": 0.40704657832030633
+  },
+  "dataset_checksum": "5deb33152a2dbe8a97de2aacd037ad13071b5a42c9005240c75d6fcc5ee972fe",
+  "feature_version": "1.1.0",
+  "artifacts": [
+    {
+      "path": "release/manifest.json",
+      "bytes": 28934,
+      "local_sha256": "f06de6cf2f8538617edb631b8f6b0718ecd417b634e68279af09f9320b0a6c69"
+    },
+    {
+      "path": "release/model.joblib",
+      "bytes": 3653368,
+      "local_sha256": "8c1407b76ab0f0ee61b64b2f76d0ccce44e9341ccaac0de3fdc9019945786c5c"
+    },
+    {
+      "path": "release/metrics.json",
+      "bytes": 327,
+      "local_sha256": "5f3ce7ce4e553d24a0f84f9dc5e49da89c79b5da106f174f704b942fc6007b3a"
+    },
+    {
+      "path": "release/comparison.csv",
+      "bytes": 786,
+      "local_sha256": "922d496a1027c356c99fd8cd5b6b3774f062dd7a74807b6adbd50cf1cac12dad"
+    },
+    {
+      "path": "release/baseline_metrics.json",
+      "bytes": 362,
+      "local_sha256": "840ed9b7737b88e5dfbdf91d71aa802ae6a3ceac39da68bff13797cb64235db8"
+    },
+    {
+      "path": "release/dataset_summary.json",
+      "bytes": 3155,
+      "local_sha256": "a3c8d588d91dd96f4498f517678efa124a92326be6d9b25ba5500a93947b7249"
+    },
+    {
+      "path": "release/split_assignments.csv",
+      "bytes": 1094837,
+      "local_sha256": "b37520a842187af8c4737a6ee077709e0b99bcbace41b8c5c637b3825f194c39"
+    },
+    {
+      "path": "release/known_urls.json",
+      "bytes": 5014,
+      "local_sha256": "3c941374e44e37b6b218e9a0b35f15dd8198ac8c1358166217ad30098f8cb00e"
+    },
+    {
+      "path": "release/behavior_review.json",
+      "bytes": 14075,
+      "local_sha256": "64db42bf9560469612c531707a358d54ba0d1070810a7472c715748af73a8992"
+    },
+    {
+      "path": "release/feature_importance.csv",
+      "bytes": 1700,
+      "local_sha256": "e4323070d170172c2e170cd34f0caf9f3201da6cd7d492455378732ceadf8c9d"
+    },
+    {
+      "path": "release/feature_importance.png",
+      "bytes": 43002,
+      "local_sha256": "7848e69680f94423fc7a3374f034a1192b4073dbb142d489ff720afc8279632a"
+    },
+    {
+      "path": "release/confusion_matrix.png",
+      "bytes": 23104,
+      "local_sha256": "ea203c81332a3255055e2ea251bdb8b93f28bb141173651d98fe18c6fbc640d3"
+    },
+    {
+      "path": "release/calibration.png",
+      "bytes": 53508,
+      "local_sha256": "5be2746e580818f26a4a6d8083b8e37c5c580ce1d60ca25d05a8b3af20f42101"
+    },
+    {
+      "path": "release/roc_curve.png",
+      "bytes": 42761,
+      "local_sha256": "175542527167d821277ad769c63afeee1adc4c6ce3570ce8080370341b5fa874"
+    },
+    {
+      "path": "release/pr_curve.png",
+      "bytes": 39161,
+      "local_sha256": "918147fa53cfbb177a84f398c49f5a8071db494aa8f9acfc6a9bd53f1613c372"
+    }
+  ],
+  "examples_checked": 20,
+  "probability_parity": {
+    "status": "passed",
+    "positive_class": 1,
+    "atol": 1e-12,
+    "max_absolute_difference": 3.3306690738754696e-16,
+    "scope": "raw classifier probabilities; independent domain warnings excluded"
+  },
+  "review_run_id": "ca8c64644e534a72af8cad406b0f91f7",
+  "reviewed_at": "2026-10-14T18:36:58.145735+00:00",
+  "review_cohort": "version-3-e3c4c481",
+  "dataset_lineage": [
+    {
+      "run_id": "8d228d4a07c743c1a7c76e39e9d3b0b5",
+      "contexts": [
+        "training",
+        "validation"
+      ],
+      "datasets": [
+        {
+          "name": "hannousse-train",
+          "digest": "8acadb10",
+          "rows": 6158
+        },
+        {
+          "name": "hannousse-validation",
+          "digest": "a26d156d",
+          "rows": 2011
+        }
+      ],
+      "added_inputs": 2
+    },
+    {
+      "run_id": "3b241a79bf8c49c39d98572a582f9316",
+      "contexts": [
+        "training",
+        "validation"
+      ],
+      "datasets": [
+        {
+          "name": "hannousse-train",
+          "digest": "8acadb10",
+          "rows": 6158
+        },
+        {
+          "name": "hannousse-validation",
+          "digest": "a26d156d",
+          "rows": 2011
+        }
+      ],
+      "added_inputs": 2
+    },
+    {
+      "run_id": "9d5021ecb8684bf7acb4a2c6d224427e",
+      "contexts": [
+        "training",
+        "validation"
+      ],
+      "datasets": [
+        {
+          "name": "hannousse-train",
+          "digest": "8acadb10",
+          "rows": 6158
+        },
+        {
+          "name": "hannousse-validation",
+          "digest": "a26d156d",
+          "rows": 2011
+        }
+      ],
+      "added_inputs": 2
+    },
+    {
+      "run_id": "525a592cb8e64717889ff71bf3ce5961",
+      "contexts": [
+        "training",
+        "validation"
+      ],
+      "datasets": [
+        {
+          "name": "hannousse-train",
+          "digest": "8acadb10",
+          "rows": 6158
+        },
+        {
+          "name": "hannousse-validation",
+          "digest": "a26d156d",
+          "rows": 2011
+        }
+      ],
+      "added_inputs": 2
+    },
+    {
+      "run_id": "e3c4c481ca7346aba76ab9a6e8da87f4",
+      "contexts": [
+        "training",
+        "validation",
+        "calibration",
+        "test"
+      ],
+      "datasets": [
+        {
+          "name": "hannousse-train",
+          "digest": "8acadb10",
+          "rows": 6158
+        },
+        {
+          "name": "hannousse-validation",
+          "digest": "a26d156d",
+          "rows": 2011
+        },
+        {
+          "name": "hannousse-calibration",
+          "digest": "d7f8571a",
+          "rows": 1298
+        },
+        {
+          "name": "hannousse-test",
+          "digest": "09fc79cf",
+          "rows": 1944
+        }
+      ],
+      "added_inputs": 4
+    }
+  ],
+  "training_runs_reopened": false,
+  "models_retrained": false,
+  "promotion": {
+    "workflow": "verified staging alias -> production alias",
+    "events": [
+      {
+        "alias": "staging",
+        "version": 3,
+        "timestamp_utc": "2026-10-14T18:36:58.165101+00:00",
+        "previous_version": null,
+        "scope": "local academic demonstration"
+      },
+      {
+        "alias": "production",
+        "version": 3,
+        "timestamp_utc": "2026-10-14T18:36:58.174891+00:00",
+        "previous_version": null,
+        "scope": "local academic demonstration"
+      }
+    ],
+    "aliases": {
+      "candidate": "3",
+      "champion": "3",
+      "production": "3",
+      "staging": "3"
+    },
+    "note": "Aliases demonstrate lifecycle management. They do not deploy a service or certify security performance."
+  },
+  "description": "Completed local academic MLflow review; aliases demonstrate lifecycle management, not a cloud deployment."
+}

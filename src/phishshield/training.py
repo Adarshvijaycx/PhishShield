@@ -9,6 +9,7 @@ import os
 from pathlib import Path
 import subprocess
 import time
+from uuid import uuid4
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 os.environ.setdefault("MPLCONFIGDIR", str(PROJECT_ROOT / ".cache" / "matplotlib"))
@@ -292,7 +293,26 @@ def train_project(
     labels = {name: partition["label"].to_numpy(dtype=int) for name, partition in datasets.items()}
     versions = _dependency_versions()
     _configure_tracking(tracking_uri)
+    training_cycle_id = uuid4().hex
+    dataset_kind = prepared.summary.get("dataset_kind", "phiusiil")
+    input_datasets = {
+        name: mlflow.data.from_pandas(
+            partition[["url", "label"]].reset_index(drop=True),
+            source=Path(csv_path).expanduser().resolve().as_uri(),
+            name=f"{dataset_kind}-{name}", targets="label",
+        )
+        for name, partition in datasets.items()
+    }
+
+    def log_inputs(partitions):
+        # Record only URL/target lineage; no supplied webpage features enter the model.
+        for partition in partitions:
+            context = "training" if partition == "train" else partition
+            mlflow.log_input(input_datasets[partition], context=context)
+
+    common_tags = {"training_cycle_id": training_cycle_id, "dataset_source": prepared.source}
     common_params = {
+        "training_cycle_id": training_cycle_id,
         "seed": seed, "split_seed": frame.attrs["split_seed"], "feature_version": FEATURE_VERSION,
         "dataset_checksum": prepared.checksum, "threshold": THRESHOLD, "model_scope": "full_url",
         "dataset_kind": prepared.summary.get("dataset_kind", "phiusiil"),
@@ -314,15 +334,18 @@ def train_project(
         baseline_metrics = _metrics(labels["validation"], np.full(len(labels["validation"]), prior))
         _write_json(output / "baseline_metrics.json", {"strategy": "training_class_prior", "phishing_prior": prior,
                                                         "evaluation_split": "validation", **baseline_metrics})
-        with mlflow.start_run(run_name="baseline-class-prior"):
-            mlflow.set_tags({"phase": "baseline", "evaluation_split": "validation", "dataset_source": prepared.source})
+        with mlflow.start_run(run_name="baseline-class-prior") as baseline_run:
+            baseline_run_id = baseline_run.info.run_id
+            mlflow.set_tags({**common_tags, "phase": "baseline", "evaluation_split": "validation"})
+            log_inputs(("train", "validation"))
             mlflow.log_params({**common_params, "algorithm": "Class-prior baseline", "phishing_prior": prior})
             mlflow.log_metrics({f"validation_{key}": value for key, value in baseline_metrics.items()})
             mlflow.log_artifact(str(output / "baseline_metrics.json"))
         for algorithm, numeric_pipeline in _build_candidates(seed).items():
             print(f"Training {algorithm} on {len(datasets['train']):,} rows...", flush=True)
             with mlflow.start_run(run_name=f"candidate-{algorithm}") as run:
-                mlflow.set_tags({"phase": "candidate", "evaluation_split": "validation", "dataset_source": prepared.source})
+                mlflow.set_tags({**common_tags, "phase": "candidate", "evaluation_split": "validation"})
+                log_inputs(("train", "validation"))
                 mlflow.log_params({**common_params, "algorithm": algorithm, "calibration": "none"})
                 mlflow.log_dict({key: str(value) for key, value in numeric_pipeline.get_params(deep=True).items()}, "estimator_parameters.json")
                 started = time.perf_counter()
@@ -359,8 +382,9 @@ def train_project(
                          samples=importance_samples, seed=seed)
 
         with mlflow.start_run(run_name=f"calibrated-winner-{algorithm}") as run:
-            mlflow.set_tags({"phase": "release", "evaluation_split": "test", "dataset_source": prepared.source,
+            mlflow.set_tags({**common_tags, "phase": "release", "evaluation_split": "test",
                              "selection_run_id": candidate_runs[algorithm], "selection_metric": "validation_average_precision"})
+            log_inputs(("train", "validation", "calibration", "test"))
             mlflow.log_params({**common_params, "algorithm": algorithm, "calibration": "sigmoid",
                                "importance_samples": min(importance_samples, len(datasets["validation"])),
                                "importance_repeats": 3})
@@ -396,6 +420,8 @@ def train_project(
                 "source_file_sha256": _source_hashes(),
                 "domain_warning_version": DOMAIN_SIGNAL_VERSION,
                 "selection_run_id": candidate_runs[algorithm], "selection_metric": "validation_average_precision",
+                "training_cycle_id": training_cycle_id, "baseline_run_id": baseline_run_id,
+                "candidate_run_ids": candidate_runs,
                 "selection_score": float(comparison.iloc[0]["average_precision"]),
                 "split_seed": frame.attrs["split_seed"],
                 "training_rows": len(datasets["train"]), "validation_rows": len(datasets["validation"]),
